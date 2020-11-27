@@ -22,6 +22,8 @@ object ExceptionHandlingFeature : Spek({
             resetCounters()
         }
 
+        afterFeature { KEvent.clear() }
+
         Scenario("a subscriber throws an exception (subscriber thread mode: BACKGROUND)") {
 
             Given("multiple normal subscribers and one exception throwing subscriber") {

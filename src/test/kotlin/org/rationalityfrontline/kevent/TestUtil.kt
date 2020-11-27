@@ -2,12 +2,9 @@
 
 package org.rationalityfrontline.kevent
 
-import mu.KotlinLogging
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureNanoTime
-
-val performanceLogger = KotlinLogging.logger("PERFORMANCE")
 
 inline fun sleep(millis: Long) = Thread.sleep(millis)
 
@@ -19,7 +16,7 @@ inline fun sleep(millis: Long) = Thread.sleep(millis)
  * @return waited time in milliseconds.
  */
 inline fun waitForEventDispatch(count: Int, counter: AtomicInteger, timeouts: Int = 30_000): Float {
-    val millis = measureNanoTime {
+    return measureNanoTime {
         var time = 0
         while (counter.get() < count) {
             sleep(1)
@@ -29,6 +26,4 @@ inline fun waitForEventDispatch(count: Int, counter: AtomicInteger, timeouts: In
             }
         }
     } / 1_000_000f
-    performanceLogger.debug { "$count subscribers finished after waiting for $millis milliseconds, average waiting time = ${millis / count}" }
-    return millis
 }

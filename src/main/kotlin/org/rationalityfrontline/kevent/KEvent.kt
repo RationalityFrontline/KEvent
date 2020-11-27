@@ -85,11 +85,15 @@ object KEvent {
     enum class ThreadMode {
         /**
          * Subscriber will be called on UI thread, see [Dispatchers.Main].
+         *
+         * Incompatible with [DispatchMode.INSTANTLY]
          */
         UI,
 
         /**
          * Subscriber will be called on background worker thread, see [Dispatchers.Default].
+         *
+         * Incompatible with [DispatchMode.INSTANTLY]
          */
         BACKGROUND,
 
@@ -107,6 +111,8 @@ object KEvent {
     enum class DispatchMode {
         /**
          * Subscribers will receive the event concurrently, the receive order is non-deterministic.
+         *
+         * If subscribers are not time consuming, please use [INSTANTLY] or [SEQUENTIAL] for better performance.
          */
         CONCURRENT,
 
@@ -115,8 +121,7 @@ object KEvent {
          * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatching
          * action. If the receive order doesn't matter, please use [CONCURRENT].
          *
-         * This dispatch mode should only be used when subscribers are time consuming. If subscribers consume
-         * events very fast, please use [SEQUENTIAL] instead and that will be much faster.
+         * If subscribers are not time consuming, please use [INSTANTLY] or [SEQUENTIAL] for better performance.
          */
         ORDERED_CONCURRENT,
 
@@ -138,7 +143,8 @@ object KEvent {
     private val scope = CoroutineScope(Dispatchers.Default + CoroutineName("KEvent") + SupervisorJob())
 
     private val subscribersMap = ConcurrentHashMap<Enum<*>, MutableList<Subscriber<Any>>>()
-    private val eventChannel = Channel<Event<Any>>(Channel.Factory.BUFFERED)
+    private val subscribersReadOnlyMap = ConcurrentHashMap<Enum<*>, Array<Subscriber<Any>>>()
+    private val eventChannel = Channel<Event<Any>>(Channel.Factory.UNLIMITED)
     private val stickyEvents = Collections.synchronizedList(mutableListOf<Event<Any>>())
     private val cancelledEvents = Collections.synchronizedSet(mutableSetOf<Event<Any>>())
     private val blockedEventTypeMap = ConcurrentHashMap<Enum<*>, Boolean>()
@@ -150,7 +156,7 @@ object KEvent {
     init {
         scope.launch {
             eventChannel.consumeAsFlow().collect { event ->
-                val subscriberList = subscribersMap[event.type]
+                val subscriberList = subscribersReadOnlyMap[event.type]
                 if (subscriberList == null || subscriberList.isEmpty()) {
                     logger.warn { "No subscribers for event type \"${event.type.name}\"" }
                 } else {
@@ -163,16 +169,15 @@ object KEvent {
 
                     when (e.dispatchMode) {
                         DispatchMode.CONCURRENT -> {
-                            synchronized(subscriberList) {
-                                subscriberList.forEach { subscriber ->
-                                    if (!dispatchEventAsync(e, subscriber)) return@forEach
-                                }
+                            // TODO: 2020/11/27 改善性能
+                            subscriberList.forEach { subscriber ->
+                                if (!dispatchEventAsync(e, subscriber)) return@forEach
                             }
                             removeCancelledEvent()
                         }
                         DispatchMode.SEQUENTIAL -> {
                             scope.launch {
-                                subscriberList.toTypedArray().forEach { subscriber ->
+                                subscriberList.forEach { subscriber ->
                                     if (!dispatchEventSync(e, subscriber)) return@forEach
                                 }
                                 removeCancelledEvent()
@@ -180,9 +185,9 @@ object KEvent {
                         }
                         DispatchMode.ORDERED_CONCURRENT -> {
                             scope.launch {
-                                subscriberList.toTypedArray().forEach { subscriber ->
+                                subscriberList.forEach { subscriber ->
                                     if (!dispatchEventAsync(e, subscriber)) return@forEach
-                                    delay(1L)
+                                    delay(1)
                                 }
                                 removeCancelledEvent()
                             }
@@ -251,10 +256,8 @@ object KEvent {
                 logger.error { "Event with dispatch mode ${DispatchMode.INSTANTLY} can't be sticky: $event" }
                 return false
             }
-            val subscriberList = subscribersMap[event.type]?.run {
-                synchronized(this) {
-                    filter { it.threadMode == ThreadMode.POSTING }
-                }
+            val subscriberList = subscribersReadOnlyMap[event.type]?.run {
+                filter { it.threadMode == ThreadMode.POSTING }
             }
             if (subscriberList == null || subscriberList.isEmpty()) {
                 logger.warn { "No subscribers for event type \"${event.type.name}\" with dispatch mode ${DispatchMode.INSTANTLY}" }
@@ -317,6 +320,12 @@ object KEvent {
         stickyEvents.clear()
     }
 
+    private inline fun updateSubscribersReadOnlyMap(type: Enum<*>) {
+        subscribersMap[type]?.run {
+            subscribersReadOnlyMap[type] = toTypedArray()
+        }
+    }
+
     private fun addSubscriber(eventType: Enum<*>, subscriber: Subscriber<Any>): Boolean {
         synchronized(subscribersMap) {
             subscribersMap.getOrPut(eventType) {
@@ -326,6 +335,7 @@ object KEvent {
                     if (find { it.consumer === subscriber.consumer } == null) {
                         add(subscriber)
                         sortByDescending { it.priority }
+                        subscribersReadOnlyMap[eventType] = toTypedArray()
                         return true
                     }
                 }
@@ -442,8 +452,9 @@ object KEvent {
     fun <T : Any> unsubscribe(eventType: Enum<*>, consumer: EventConsumer<T>): Boolean {
         subscribersMap[eventType]?.run {
             synchronized(this) {
-                return removeIf { subscriber ->
-                    subscriber.consumer == consumer
+                if (removeIf { subscriber -> subscriber.consumer == consumer }) {
+                    updateSubscribersReadOnlyMap(eventType)
+                    return true
                 }
             }
         }
@@ -510,7 +521,7 @@ object KEvent {
      * @return true if any subscriber gets removed, else false.
      */
     fun removeSubscribersByEventType(eventType: Enum<*>): Boolean {
-        return subscribersMap.remove(eventType) != null
+        return if (subscribersMap.remove(eventType) != null) { updateSubscribersReadOnlyMap(eventType); true } else false
     }
 
     /**
@@ -520,10 +531,11 @@ object KEvent {
      */
     fun removeSubscribersByTag(tag: String): Boolean {
         var removed = false
-        subscribersMap.forEach { (_, subscribers) ->
+        subscribersMap.forEach { (eventType, subscribers) ->
             synchronized(subscribers) {
                 if (subscribers.removeIf { it.tag == tag }) {
                     removed = true
+                    updateSubscribersReadOnlyMap(eventType)
                 }
             }
         }
@@ -535,6 +547,7 @@ object KEvent {
      */
     fun clearSubscribers() {
         subscribersMap.clear()
+        subscribersReadOnlyMap.clear()
     }
 
     /**

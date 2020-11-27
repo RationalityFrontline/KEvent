@@ -45,6 +45,8 @@ object StickyEventFeature : Spek({
             counter.set(0)
         }
 
+        afterFeature { KEvent.clear() }
+
         Scenario("basic sticky event usage") {
 
             Given("an existing subscriber") {
@@ -165,7 +167,6 @@ object StickyEventFeature : Spek({
                         }
                     }
                 }
-                performanceLogger.info { "1000 sticky subscriber added in $dispatchTime milliseconds" }
                 assertTrue { dispatchTime < 200 }
                 val finishingTime = waitForEventDispatch(1000, counter)
                 assertTrue { unordered.get() }

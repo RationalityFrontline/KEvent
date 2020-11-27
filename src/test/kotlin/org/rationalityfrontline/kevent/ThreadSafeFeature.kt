@@ -19,6 +19,8 @@ object ThreadSafeFeature : Spek({
             KEvent.clear()
         }
 
+        afterFeature { KEvent.clear() }
+
         Scenario("adding a new subscription while dispatching event of the same event type") {
 
             Given("some time consuming subscribers") {

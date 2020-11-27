@@ -1,4 +1,4 @@
-# KEvent  [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) ![language](https://img.shields.io/badge/100%25-kotlin-orange)
+# KEvent   [![JCenter Version](https://img.shields.io/bintray/v/rationalityfrontline/kevent/kevent?label=JCenter)](https://bintray.com/rationalityfrontline/kevent/kevent) [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) ![language](https://img.shields.io/badge/100%25-kotlin-orange)
 
 A powerful in-process event dispatcher based on Kotlin and Coroutines.
 

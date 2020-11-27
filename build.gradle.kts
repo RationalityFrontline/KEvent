@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import java.util.*
 
 plugins {
-	kotlin("jvm") version "1.4.10"
+	kotlin("jvm") version "1.4.20"
     `java-library`
     `maven-publish`
     id("org.jetbrains.dokka") version "1.4.10"
@@ -23,7 +23,7 @@ repositories {
 
 
 dependencies {
-    val coroutinesVersion = "1.3.9"
+    val coroutinesVersion = "1.4.2"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
@@ -31,6 +31,7 @@ dependencies {
     val spekVersion = "2.0.14"
     /** Logging -------------------------------------------------------- */
     testImplementation("org.slf4j:slf4j-simple:1.7.30")
+    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.13.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test:${getKotlinPluginVersion()}")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")

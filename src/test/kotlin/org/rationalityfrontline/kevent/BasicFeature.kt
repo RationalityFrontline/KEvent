@@ -1,4 +1,4 @@
 package org.rationalityfrontline.kevent
 
-object BasicUsage {
+object BasicFeature {
 }

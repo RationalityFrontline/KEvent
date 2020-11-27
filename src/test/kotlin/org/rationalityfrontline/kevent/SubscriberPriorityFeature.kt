@@ -28,6 +28,8 @@ object SubscriberPriorityFeature : Spek({
             counter.set(0)
         }
 
+        afterFeature { KEvent.clear() }
+
         Scenario("priority works with all event dispatch mode except for CONCURRENT") {
 
             Given("some subscribers with different priorities") {
