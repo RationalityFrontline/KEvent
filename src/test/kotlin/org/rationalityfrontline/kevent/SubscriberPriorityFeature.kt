@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 
 object SubscriberPriorityFeature : Spek({
     Feature("Subscribers can define their priorities") {
+
         val currentPriority by memoized { AtomicInteger(Int.MAX_VALUE) }
         val subscriberAssertionFailed by memoized { AtomicBoolean(false) }
         val counter by memoized { AtomicInteger(0) }
@@ -20,14 +21,8 @@ object SubscriberPriorityFeature : Spek({
             counter.set(0)
         }
 
-        beforeEachScenario {
-            KEvent.clear()
-        }
-
-        beforeEachTest {
-            counter.set(0)
-        }
-
+        beforeEachScenario { KEvent.clear() }
+        beforeEachTest { counter.set(0) }
         afterFeature { KEvent.clear() }
 
         Scenario("priority works with all event dispatch mode except for CONCURRENT") {
@@ -48,7 +43,7 @@ object SubscriberPriorityFeature : Spek({
             }
 
             When("an event is posted in dispatch mode CONCURRENT") {
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
                 waitForEventDispatch(range.count(), counter)
             }
 
@@ -58,7 +53,7 @@ object SubscriberPriorityFeature : Spek({
 
             When("an event is posted in dispatch mode ORDERED_CONCURRENT") {
                 resetCounters()
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
                 waitForEventDispatch(range.count(), counter)
             }
 
@@ -68,7 +63,7 @@ object SubscriberPriorityFeature : Spek({
 
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 resetCounters()
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
                 waitForEventDispatch(range.count(), counter)
                 assertFalse { subscriberAssertionFailed.get() }
             }
@@ -88,7 +83,7 @@ object SubscriberPriorityFeature : Spek({
                         }
                     }
                 }
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
                 assertFalse { subscriberAssertionFailed.get() }
             }
         }

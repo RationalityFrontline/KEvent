@@ -12,18 +12,11 @@ import kotlin.test.assertTrue
 
 object StickyEventFeature : Spek({
     Feature("Events can be sticky") {
+
         val existingSubscriberCalled by memoized { AtomicBoolean(false) }
         val laterAddedSubscriberCalled by memoized { AtomicBoolean(false) }
         val subscriberAssertionFailed by memoized { AtomicBoolean(false) }
         val counter by memoized { AtomicInteger(0) }
-
-        fun resetCounters() {
-            existingSubscriberCalled.set(false)
-            laterAddedSubscriberCalled.set(false)
-            subscriberAssertionFailed.set(false)
-            counter.set(0)
-        }
-
         val existingSubscriber: EventConsumer<Unit> = { event ->
             try {
                 existingSubscriberCalled.set(true)
@@ -36,15 +29,18 @@ object StickyEventFeature : Spek({
             }
         }
 
+        fun resetCounters() {
+            existingSubscriberCalled.set(false)
+            laterAddedSubscriberCalled.set(false)
+            subscriberAssertionFailed.set(false)
+            counter.set(0)
+        }
+
         beforeEachScenario {
             KEvent.clear()
             resetCounters()
         }
-
-        beforeEachTest {
-            counter.set(0)
-        }
-
+        beforeEachTest { counter.set(0) }
         afterFeature { KEvent.clear() }
 
         Scenario("basic sticky event usage") {
@@ -54,7 +50,7 @@ object StickyEventFeature : Spek({
             }
 
             When("a sticky event is posted") {
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true)
                 waitForEventDispatch(1, counter)
             }
 
@@ -119,16 +115,7 @@ object StickyEventFeature : Spek({
             }
 
             When("a sticky event is posted with dispatch mode INSTANTLY") {
-                assertFalse {
-                    KEvent.post(
-                        Event(
-                            TestEventType.A,
-                            Unit,
-                            KEvent.DispatchMode.INSTANTLY,
-                            isSticky = true
-                        )
-                    )
-                }
+                assertFalse { KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY, isSticky = true) }
             }
 
             Then("the event won't get dispatched to any subscribers") {
@@ -145,7 +132,7 @@ object StickyEventFeature : Spek({
         Scenario("sticky events are dispatched to later added subscribers concurrently and asynchronously") {
 
             When("a sticky event is posted") {
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true)
             }
 
             Then(

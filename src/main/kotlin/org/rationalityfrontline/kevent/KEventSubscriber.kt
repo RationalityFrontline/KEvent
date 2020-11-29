@@ -43,7 +43,7 @@ interface KEventSubscriber {
  */
 inline fun <T : Any> KEventSubscriber.subscribe(
     eventType: Enum<*>,
-    threadMode: ThreadMode = KEvent.defaultThreadMode,
+    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
     priority: Int = KEvent.DEFAULT_PRIORITY,
     noinline consumer: EventConsumer<T>
 ): Boolean = KEvent.subscribe(eventType, threadMode, priority, SUBSCRIPTION_TAG, consumer)
@@ -60,7 +60,7 @@ inline fun <T : Any> KEventSubscriber.subscribe(
 inline fun <T : Any> KEventSubscriber.subscribe(
     eventType: Enum<*>,
     noinline consumer: EventConsumer<T>,
-    threadMode: ThreadMode = KEvent.defaultThreadMode,
+    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
     priority: Int = KEvent.DEFAULT_PRIORITY
 ): Boolean = KEvent.subscribe(eventType, consumer, threadMode, priority, SUBSCRIPTION_TAG)
 
@@ -75,7 +75,7 @@ inline fun <T : Any> KEventSubscriber.subscribe(
  */
 inline fun <T : Any> KEventSubscriber.subscribeMultiple(
     eventTypes: Collection<Enum<*>>,
-    threadMode: ThreadMode = KEvent.defaultThreadMode,
+    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
     priority: Int = KEvent.DEFAULT_PRIORITY,
     noinline consumer: EventConsumer<T>
 ): Boolean = KEvent.subscribeMultiple(eventTypes, threadMode, priority, SUBSCRIPTION_TAG, consumer)
@@ -92,7 +92,7 @@ inline fun <T : Any> KEventSubscriber.subscribeMultiple(
 inline fun <T : Any> KEventSubscriber.subscribeMultiple(
     eventTypes: Collection<Enum<*>>,
     noinline consumer: EventConsumer<T>,
-    threadMode: ThreadMode = KEvent.defaultThreadMode,
+    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
     priority: Int = KEvent.DEFAULT_PRIORITY,
 ): Boolean = KEvent.subscribeMultiple(eventTypes, consumer, threadMode, priority, SUBSCRIPTION_TAG)
 

@@ -11,14 +11,12 @@ import kotlin.test.assertTrue
 
 object ThreadSafeFeature : Spek({
     Feature("KEvent is thread safe") {
+
         val dispatching by memoized { AtomicBoolean(false) }
         val laterAddedSubscriberCounter by memoized { AtomicInteger(0) }
         val counter by memoized { AtomicInteger(0) }
 
-        beforeEachScenario {
-            KEvent.clear()
-        }
-
+        beforeEachScenario { KEvent.clear() }
         afterFeature { KEvent.clear() }
 
         Scenario("adding a new subscription while dispatching event of the same event type") {
@@ -36,7 +34,7 @@ object ThreadSafeFeature : Spek({
             }
 
             When("an event is posted in dispatch mode SEQUENTIAL") {
-                KEvent.post(Event(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL))
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
                 sleep(5)
             }
 

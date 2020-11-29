@@ -74,7 +74,7 @@ object PerformanceBenchmark {
 
         fun measurePostTime(): Float = measureNanoTime {
             repeat(eventNum) {
-                KEvent.post(Event(TestEventType.A, Unit, dispatchMode, isSticky))
+                KEvent.post(TestEventType.A, Unit, dispatchMode, isSticky)
             }
         } / 1_000_000f
 
@@ -113,11 +113,13 @@ object PerformanceBenchmark {
         return arrayOf(avgSubsTime, avgPostTime, avgWaitTime, avgCallTime)
     }
 
-    fun testWithAllDispatchModes(eventNum: Int, subscriberNum: Int, isTimeConsuming: Boolean, enableLog: Boolean = true) {
+    fun testWithAllDispatchModes(eventNum: Int, subscriberNum: Int, isTimeConsuming: Boolean, enableLog: Boolean = true, skipBlocking: Boolean = false) {
         if (enableLog) logger.info { "${"".padEnd(100, '#')}\n【Testing $eventNum events with $subscriberNum ${if (isTimeConsuming) "time consuming " else ""}subscribers】" }
         val results = mutableListOf<Array<Float>>()
-        results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.INSTANTLY, KEvent.ThreadMode.POSTING, isTimeConsuming, enableLog = enableLog))
-        results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.SEQUENTIAL, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
+        if (!skipBlocking) {
+            results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.INSTANTLY, KEvent.ThreadMode.POSTING, isTimeConsuming, enableLog = enableLog))
+            results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.SEQUENTIAL, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
+        }
         results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.CONCURRENT, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.ORDERED_CONCURRENT, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         if (csvEnabled) {
