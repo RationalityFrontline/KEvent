@@ -23,7 +23,6 @@ object EventCancellingFeature : Spek({
                 for (i in 1..10) {
                     KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.POSTING, priority = i) { event ->
                         if (i == 6) {
-                            sleep(10)
                             KEvent.cancelEvent(event)
                         }
                         counter.getAndIncrement()
@@ -42,10 +41,9 @@ object EventCancellingFeature : Spek({
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 counter.set(0)
                 KEvent.clear()
-                for (i in 1..10) {
+                for (i in 1..100) {
                     KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
-                        if (i == 6) {
-                            sleep(10)
+                        if (i == 51) {
                             KEvent.cancelEvent(event)
                         }
                         counter.getAndIncrement()
@@ -53,20 +51,52 @@ object EventCancellingFeature : Spek({
                 }
                 KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
                 assertFailsWith(TimeoutException::class) {
-                    waitForEventDispatch(10, counter, timeouts = 30)
+                    waitForEventDispatch(100, counter, timeouts = 30)
                 }
-                assertEquals(5, counter.get())
+                assertEquals(50, counter.get())
             }
 
-            And("it doesn't work with event dispatch mode CONCURRENT or ORDERED_CONCURRENT") {
+            And("it doesn't work with event dispatch mode CONCURRENT") {
                 counter.set(0)
                 KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
                 sleep(30)
-                assertNotEquals(5, counter.get())
+                assertNotEquals(50, counter.get())
+            }
+
+            And("it works with event dispatch mode ORDERED_CONCURRENT when cancellation is called instantly on subscriber invocation") {
                 counter.set(0)
+                KEvent.clear()
+                for (i in 1..100) {
+                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
+                        if (i == 51) {
+                            KEvent.cancelEvent(event)
+                        }
+                        sleep(10)
+                        counter.getAndIncrement()
+                    }
+                }
                 KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
-                sleep(30)
-                assertNotEquals(5, counter.get())
+                assertFailsWith(TimeoutException::class) {
+                    waitForEventDispatch(100, counter, timeouts = 1500)
+                }
+                assertEquals(50, counter.get())
+            }
+
+            And("it doesn't work with event dispatch mode ORDERED_CONCURRENT when cancellation is not called instantly on subscriber invocation") {
+                counter.set(0)
+                KEvent.clear()
+                for (i in 1..100) {
+                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
+                        sleep(10)
+                        if (i == 51) {
+                            KEvent.cancelEvent(event)
+                        }
+                        counter.getAndIncrement()
+                    }
+                }
+                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                sleep(1500)
+                assertNotEquals(50, counter.get())
             }
         }
     }

@@ -84,23 +84,36 @@ object KEvent {
      */
     enum class ThreadMode {
         /**
-         * Subscriber will be called on the same thread that the event get posted,
-         * only events posted with dispatch mode [DispatchMode.INSTANTLY] will be dispatched to
-         * subscribers of this thread mode.
+         * Subscriber will be called on the same thread that the event get posted.
+         *
+         * Only compatible with [DispatchMode.INSTANTLY].
+         *
+         * Usage scenarios:
+         * * All subscribers of the event type are not time consuming.
+         * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
          */
         POSTING,
 
         /**
          * Subscriber will be called on background worker thread, see [Dispatchers.Default].
          *
-         * Incompatible with [DispatchMode.INSTANTLY]
+         * Compatible with [DispatchMode.CONCURRENT] and [DispatchMode.ORDERED_CONCURRENT].
+         *
+         * Usage scenarios:
+         * * Single time consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
+         * * Multiple time consuming subscribers and it's ok to run these subscribers concurrently.
          */
         BACKGROUND,
 
         /**
          * Subscriber will be called on UI thread, see [Dispatchers.Main].
          *
-         * Incompatible with [DispatchMode.INSTANTLY]
+         * Only compatible with [DispatchMode.SEQUENTIAL].
+         *
+         * Usage scenarios:
+         * * The subscriber update UI components and thus must be called in the UI thread
+         * (this also means the subscriber must not be time consuming).
+         * If events are always posted from UI thread, please use [POSTING] for better performance.
          */
         UI,
     }
@@ -110,30 +123,46 @@ object KEvent {
      */
     enum class DispatchMode {
         /**
-         * Subscriber will be called instantly and sequentially(one by one according to their priority)
-         * on the same thread that the event get posted,
-         * only subscribers with thread mode [ThreadMode.POSTING] will be called.
+         * Subscriber will be called instantly and sequentially (one by one according to their priority)
+         * on the same thread that the event get posted.
+         *
+         * Only compatible with [ThreadMode.POSTING].
+         *
+         * Usage scenarios:
+         * * All subscribers of the event type are not time consuming.
+         * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
          */
         INSTANTLY,
 
         /**
          * Subscribers will receive the event sequentially (one by one according to their priority).
+         *
+         * Compatible with [ThreadMode.BACKGROUND] and [ThreadMode.UI].
+         *
+         * Usage scenarios:
+         * * Subscribers need to be called sequentially and should not be call on the event posting thread.
          */
         SEQUENTIAL,
 
         /**
          * Subscribers will receive the event concurrently, the receive order is non-deterministic.
          *
-         * If subscribers are not time consuming, please use [INSTANTLY] or [SEQUENTIAL] for better performance.
+         * Only compatible with [ThreadMode.BACKGROUND].
+         *
+         * Usage scenarios:
+         * * Subscribers are time consuming and can be called concurrently.
          */
         CONCURRENT,
 
         /**
          * Subscribers will receive the event concurrently, the receive order is determined by their priority.
-         * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatching
+         * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatch
          * action. If the receive order doesn't matter, please use [CONCURRENT].
          *
-         * If subscribers are not time consuming, please use [INSTANTLY] or [SEQUENTIAL] for better performance.
+         *  Only compatible with [ThreadMode.BACKGROUND].
+         *
+         * Usage scenarios:
+         * * Subscribers are time consuming and can be called concurrently, but their launch order matters (for example, when event cancellation is need).
          */
         ORDERED_CONCURRENT,
     }
@@ -304,7 +333,8 @@ object KEvent {
     ): Boolean = post(Event(type, data, dispatchMode, isSticky))
 
     /**
-     * Cancel further event dispatching, this should only be used together with [DispatchMode.SEQUENTIAL] or [DispatchMode.INSTANTLY].
+     * Cancel further event dispatching, this function works with [DispatchMode.SEQUENTIAL] and [DispatchMode.INSTANTLY],
+     * and works with [DispatchMode.ORDERED_CONCURRENT] with additional requirements (cancellation need to be called instantly on subscriber invocation), but won't work with [DispatchMode.CONCURRENT]
      *
      * @return true if the event get cancelled, false if the event is already cancelled before.
      */

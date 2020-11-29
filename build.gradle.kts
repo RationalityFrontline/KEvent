@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "org.rationalityfrontline"
-version = "1.0.0-dev.001"
+version = "1.0.0"
 val SDK_NAME = "KEvent"
 val SDK_VERSION = version.toString()
 
@@ -77,7 +77,7 @@ tasks {
 }
 
 val NAME = "kevent"
-val DESC = "A powerful event dispatcher"
+val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
 
 publishing {
@@ -126,7 +126,7 @@ bintray {
         repo = "kevent"
         name = if (project.version.toString().contains("dev")) "$NAME-dev" else NAME
         desc = DESC
-        setLabels("kotlin", "eventbus")
+        setLabels("kotlin", "eventbus", "event dispatcher", "event driven", "android", "swing", "javafx")
         setLicenses("Apache-2.0")
         publicDownloadNumbers = true
         githubRepo = GITHUB_REPO

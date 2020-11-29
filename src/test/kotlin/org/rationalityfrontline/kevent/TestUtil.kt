@@ -16,11 +16,12 @@ inline fun sleep(millis: Long) = Thread.sleep(millis)
  * @return waited time in milliseconds.
  */
 inline fun waitForEventDispatch(count: Int, counter: AtomicInteger, timeouts: Int = 30_000): Float {
+    val startTime = System.currentTimeMillis()
     return measureNanoTime {
-        var time = 0
+        var time: Long
         while (counter.get() < count) {
             sleep(1)
-            time += 1
+            time = System.currentTimeMillis() - startTime
             if (time >= timeouts) {
                 throw TimeoutException("Subscribers($count in total) didn't finish after waiting for $time milliseconds")
             }
