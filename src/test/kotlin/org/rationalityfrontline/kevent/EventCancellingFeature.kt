@@ -9,7 +9,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
 object EventCancellingFeature : Spek({
-    Feature("You can cancel further event dispatching when the event is posted in dispatch mode INSTANTLY or SEQUENTIAL") {
+    Feature("You can cancel an event") {
 
         val counter by memoized { AtomicInteger(0) }
 
