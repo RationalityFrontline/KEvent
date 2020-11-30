@@ -47,8 +47,7 @@ implementation 'org.rationalityfrontline:kevent:1.0.0'
 </dependency>
 ```
 
-## Documentation
-**Basic usage:**
+## Usage
 ```kotlin
 import java.lang.ClassCastException
 
@@ -139,16 +138,17 @@ you can clone this repository and run the benchmark on your own machine. Here is
 
 | Conditions\AvgCallTime(ms)                                    | INSTANTLY  | SEQUENTIAL  | CONCURRENT   | ORDERED\_CONCURRENT |
 |------------------------------------------------|------------|-------------|--------------|---------------------|
-| event\-1; subs\-10000; tc\-false; st\-false    | 4\.28E\-05 | 0\.00136298 | 0\.014001329 | 2\.0647497          |
-| event\-1; subs\-10000; tc\-true; st\-false     | 10\.513036 | 10\.69949   | 2\.6430638   | 2\.8060534          |
-| event\-10000; subs\-1; tc\-false; st\-false    | 6\.81E\-04 | 0\.03349961 | 0\.01899664  | 0\.025285339        |
-| event\-10000; subs\-1; tc\-true; st\-false     | 10\.477978 | 2\.6560345  | 2\.6473286   | 2\.7563891          |
-| event\-1000; subs\-10000; tc\-false; st\-false | 4\.62E\-05 | 4\.32E\-04  | 0\.014056747 | 0\.00546798         |
-| event\-1; subs\-10000; tc\-false; st\-true     |            |             | 0\.01410701  |                     |
-| event\-1; subs\-10000; tc\-true; st\-true      |            |             | 2\.6499982   |                     |
-| event\-10000; subs\-1; tc\-false; st\-true     |            |             | 0\.02116017  |                     |
-| event\-10000; subs\-1; tc\-true; st\-true      |            |             | 2\.65346     |                     |
-| event\-1000; subs\-10000; tc\-false; st\-true  |            |             | 0\.01399993  |                     |
+| event\-1;subs\-10000;tc\-false;st\-false    | 4\.28E\-05 | 0\.00136298 | 0\.014001329 | 2\.0647497          |
+| event\-1;subs\-10000;tc\-true;st\-false     | 10\.513036 | 10\.69949   | 2\.6430638   | 2\.8060534          |
+| event\-10000;subs\-1;tc\-false;st\-false    | 6\.81E\-04 | 0\.03349961 | 0\.01899664  | 0\.025285339        |
+| event\-10000;subs\-1;tc\-true;st\-false     | 10\.477978 | 2\.6560345  | 2\.6473286   | 2\.7563891          |
+| event\-1000;subs\-10000;tc\-false;st\-false | 4\.62E\-05 | 4\.32E\-04  | 0\.014056747 | 0\.00546798         |
+| event\-1;subs\-10000;tc\-false;st\-true     |            |             | 0\.01410701  |                     |
+| event\-1;subs\-10000;tc\-true;st\-true      |            |             | 2\.6499982   |                     |
+| event\-10000;subs\-1;tc\-false;st\-true     |            |             | 0\.02116017  |                     |
+| event\-10000;subs\-1;tc\-true;st\-true      |            |             | 2\.65346     |                     |
+| event\-1000;subs\-10000;tc\-false;st\-true  |            |             | 0\.01399993  |                     |
+
 *event = event num<br>
 subs = subscriber num<br>
 tc = if subscribers are time-consuming (sleep 10ms in the above benchmark)<br>
