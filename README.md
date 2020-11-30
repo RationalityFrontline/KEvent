@@ -30,7 +30,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
  
 ## Download
 **Gradle Kotlin DSL**
-```groovy
+```kotlin
 implementation("org.rationalityfrontline:kevent:1.0.0")
 ```
 **Gradle Groovy DSL**
@@ -127,15 +127,40 @@ Different event data types might come with same event type: class java.lang.Inte
 ExampleSubscriber.onAnyEvent       : Event(type=STRING_EVENT, data=42, dispatchMode=INSTANTLY, isSticky=false)
 ```
 For advanced features, please refer to the corresponding test specifications:
+* [threading (dispatch modes and thread modes)](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/ThreadingFeature.kt)
 * [event blocking](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/EventBlockingFeature.kt)
 * [event dispatch cancellation](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/EventCancellingFeature.kt)
 * [sticky events](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/StickyEventFeature.kt)
 * [subscriber priority](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/SubscriberPriorityFeature.kt)
 * [subscriber tag](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/SubscriberTagFeature.kt)
-
 ## Performance
 There is a [sample benchmark code](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/PerformanceBenchmark.kt) in the repository, 
-you can clone this repository and run the benchmark on your own machine.
+you can clone this repository and run the benchmark on your own machine. Here is the benchmark results on my machine:
+
+| Conditions\AvgCallTime(ms)                                    | INSTANTLY  | SEQUENTIAL  | CONCURRENT   | ORDERED\_CONCURRENT |
+|------------------------------------------------|------------|-------------|--------------|---------------------|
+| event\-1; subs\-10000; tc\-false; st\-false    | 4\.28E\-05 | 0\.00136298 | 0\.014001329 | 2\.0647497          |
+| event\-1; subs\-10000; tc\-true; st\-false     | 10\.513036 | 10\.69949   | 2\.6430638   | 2\.8060534          |
+| event\-10000; subs\-1; tc\-false; st\-false    | 6\.81E\-04 | 0\.03349961 | 0\.01899664  | 0\.025285339        |
+| event\-10000; subs\-1; tc\-true; st\-false     | 10\.477978 | 2\.6560345  | 2\.6473286   | 2\.7563891          |
+| event\-1000; subs\-10000; tc\-false; st\-false | 4\.62E\-05 | 4\.32E\-04  | 0\.014056747 | 0\.00546798         |
+| event\-1; subs\-10000; tc\-false; st\-true     |            |             | 0\.01410701  |                     |
+| event\-1; subs\-10000; tc\-true; st\-true      |            |             | 2\.6499982   |                     |
+| event\-10000; subs\-1; tc\-false; st\-true     |            |             | 0\.02116017  |                     |
+| event\-10000; subs\-1; tc\-true; st\-true      |            |             | 2\.65346     |                     |
+| event\-1000; subs\-10000; tc\-false; st\-true  |            |             | 0\.01399993  |                     |
+*event = event num<br>
+subs = subscriber num<br>
+tc = if subscribers are time-consuming (sleep 10ms in the above benchmark)<br>
+st = if the event is sticky (and subscribers are added after the event was posted)*
+
+```text
+[Machine Info]
+CPU: Intel(R) Core(TM) i5-6500 @ 3.20GHz (4C4T)
+Memory: 8 + 4 = 12GB, DDR4 SDRAM, 2133MHz
+OS: Window 10 Enterprise 64 bit version 1909
+JDK: OpenJDK 14.0.1+7 64 bit
+```
 
 ## License
 
