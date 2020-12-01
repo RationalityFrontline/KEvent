@@ -1,5 +1,6 @@
 # KEvent  
-[![Kotlin 1.4.10](https://img.shields.io/badge/Kotlin-1.4.20-blue.svg)](http://kotlinlang.org) [![JCenter Version](https://img.shields.io/bintray/v/rationalityfrontline/kevent/kevent?label=JCenter)](https://bintray.com/rationalityfrontline/kevent/kevent) [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) ![language](https://img.shields.io/badge/100%25-kotlin-orange)
+[![Kotlin 1.4.10](https://img.shields.io/badge/Kotlin-1.4.20-blue.svg)](http://kotlinlang.org) [![JCenter Version](https://img.shields.io/bintray/v/rationalityfrontline/kevent/kevent?label=JCenter)](https://bintray.com/rationalityfrontline/kevent/kevent) [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
+
 
 A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
@@ -49,8 +50,6 @@ implementation 'org.rationalityfrontline:kevent:1.0.0'
 
 ## Usage
 ```kotlin
-import java.lang.ClassCastException
-
 enum class EventTypes {
     UNIT_EVENT,
     STRING_EVENT,
