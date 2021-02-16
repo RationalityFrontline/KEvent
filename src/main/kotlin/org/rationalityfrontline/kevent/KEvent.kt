@@ -34,7 +34,7 @@ import kotlin.coroutines.CoroutineContext
  * @constructor Create a new event.
  * @param type event type, must be [Enum].
  * @param data event data, can be [Any], use [Unit] if no data is needed.
- * @param dispatchMode event dispatch mode, see [KEvent.DispatchMode], default to [KEvent.DispatchMode.INSTANTLY]
+ * @param dispatchMode event dispatch mode, see [EventDispatchMode]
  * @param isSticky whether this event is sticky. Sticky event will be stored in the [KEvent]
  * until it get removed manually by calling [KEvent.removeStickyEvent], [KEvent.removeAllStickyEvents] or [KEvent.clear].
  * The event get dispatched normally for already existing subscribers (note that the event object received by
@@ -45,10 +45,10 @@ import kotlin.coroutines.CoroutineContext
 data class Event<T : Any>(
     val type: Enum<*>,
     val data: T,
-    val dispatchMode: KEvent.DispatchMode = KEvent.DispatchMode.INSTANTLY,
+    val dispatchMode: EventDispatchMode,
     val isSticky: Boolean = false,
 ) {
-    val isPostedSticky: Boolean get() = KEvent.containsStickyEvent(this as Event<Any>)
+    fun isPostedSticky(kEvent: KEvent = KEVENT) : Boolean = kEvent.containsStickyEvent(this as Event<Any>)
 }
 
 
@@ -57,115 +57,125 @@ data class Event<T : Any>(
  */
 typealias EventConsumer<T> = (Event<T>) -> Unit
 
-
 /**
  * Event subscriber.
  *
  * @constructor Create a subscriber.
  * @param consumer event consumer function.
- * @param threadMode specifies on which thread the subscriber will be called, see [KEvent.ThreadMode].
+ * @param threadMode specifies on which thread the subscriber will be called, see [SubscriberThreadMode].
  * @param priority subscriber priority, bigger is higher, default to 0.
  * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
  */
-private data class Subscriber<T : Any>(
+data class Subscriber<T : Any>(
+    val eventTypes: Set<Enum<*>>,
     val consumer: EventConsumer<T>,
-    val threadMode: KEvent.ThreadMode = KEvent.ThreadMode.BACKGROUND,
+    val threadMode: SubscriberThreadMode,
     val priority: Int = 0,
     val tag: String = "",
 )
 
 /**
- * A lightweight but powerful event dispatcher.
+ * Specifies how the event will be dispatched to subscribers.
  */
-object KEvent {
+enum class EventDispatchMode {
+    /**
+     * Subscribers will receive the event sequentially (one by one according to their priority)
+     * on the same thread that the event get posted.
+     *
+     * Only compatible with [SubscriberThreadMode.POSTING].
+     *
+     * Usage scenarios:
+     * * All subscribers of the event type are not time consuming.
+     * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
+     */
+    POSTING,
 
     /**
-     * Specifies on which thread the subscriber will be called.
+     * Subscribers will receive the event sequentially (one by one according to their priority).
+     *
+     * Compatible with [SubscriberThreadMode.BACKGROUND] and [SubscriberThreadMode.UI].
+     *
+     * Usage scenarios:
+     * * Subscribers need to be called sequentially and should not be called on the event posting thread.
      */
-    enum class ThreadMode {
-        /**
-         * Subscriber will be called on the same thread that the event get posted.
-         *
-         * Only compatible with [DispatchMode.INSTANTLY].
-         *
-         * Usage scenarios:
-         * * All subscribers of the event type are not time consuming.
-         * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
-         */
-        POSTING,
-
-        /**
-         * Subscriber will be called on background worker thread, see [Dispatchers.Default].
-         *
-         * Compatible with [DispatchMode.CONCURRENT] and [DispatchMode.ORDERED_CONCURRENT].
-         *
-         * Usage scenarios:
-         * * Single time consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
-         * * Multiple time consuming subscribers and it's ok to run these subscribers concurrently.
-         */
-        BACKGROUND,
-
-        /**
-         * Subscriber will be called on UI thread, see [Dispatchers.Main].
-         *
-         * Only compatible with [DispatchMode.SEQUENTIAL].
-         *
-         * Usage scenarios:
-         * * The subscriber update UI components and thus must be called in the UI thread
-         * (this also means the subscriber must not be time consuming).
-         * If events are always posted from UI thread, please use [POSTING] for better performance.
-         */
-        UI,
-    }
+    SEQUENTIAL,
 
     /**
-     * Specifies how the event will be dispatched to subscribers.
+     * Subscribers will receive the event concurrently, the receive order is non-deterministic.
+     *
+     * Only compatible with [SubscriberThreadMode.BACKGROUND].
+     *
+     * Usage scenarios:
+     * * Subscribers are time consuming and can be called concurrently.
      */
-    enum class DispatchMode {
-        /**
-         * Subscriber will be called instantly and sequentially (one by one according to their priority)
-         * on the same thread that the event get posted.
-         *
-         * Only compatible with [ThreadMode.POSTING].
-         *
-         * Usage scenarios:
-         * * All subscribers of the event type are not time consuming.
-         * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
-         */
-        INSTANTLY,
+    CONCURRENT,
 
-        /**
-         * Subscribers will receive the event sequentially (one by one according to their priority).
-         *
-         * Compatible with [ThreadMode.BACKGROUND] and [ThreadMode.UI].
-         *
-         * Usage scenarios:
-         * * Subscribers need to be called sequentially and should not be call on the event posting thread.
-         */
-        SEQUENTIAL,
+    /**
+     * Subscribers will receive the event concurrently, the receive order is determined by their priority.
+     * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatch
+     * action. If the receive order doesn't matter, please use [CONCURRENT].
+     *
+     *  Only compatible with [SubscriberThreadMode.BACKGROUND].
+     *
+     * Usage scenarios:
+     * * Subscribers are time consuming and can be called concurrently, but their launch order matters (for example, when event cancellation is need).
+     */
+    ORDERED_CONCURRENT,
+}
 
-        /**
-         * Subscribers will receive the event concurrently, the receive order is non-deterministic.
-         *
-         * Only compatible with [ThreadMode.BACKGROUND].
-         *
-         * Usage scenarios:
-         * * Subscribers are time consuming and can be called concurrently.
-         */
-        CONCURRENT,
+/**
+ * Specifies on which thread the subscriber will be called.
+ */
+enum class SubscriberThreadMode {
+    /**
+     * Subscriber will be called on the same thread that the event get posted.
+     *
+     * Only compatible with [EventDispatchMode.POSTING].
+     *
+     * Usage scenarios:
+     * * All subscribers of the event type are not time consuming.
+     * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
+     */
+    POSTING,
 
-        /**
-         * Subscribers will receive the event concurrently, the receive order is determined by their priority.
-         * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatch
-         * action. If the receive order doesn't matter, please use [CONCURRENT].
-         *
-         *  Only compatible with [ThreadMode.BACKGROUND].
-         *
-         * Usage scenarios:
-         * * Subscribers are time consuming and can be called concurrently, but their launch order matters (for example, when event cancellation is need).
-         */
-        ORDERED_CONCURRENT,
-    }
+    /**
+     * Subscriber will be called on background worker thread, see [Dispatchers.Default].
+     *
+     * Compatible with [EventDispatchMode.CONCURRENT] and [EventDispatchMode.ORDERED_CONCURRENT].
+     *
+     * Usage scenarios:
+     * * Single time consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
+     * * Multiple time consuming subscribers and it's ok to run these subscribers concurrently.
+     */
+    BACKGROUND,
+
+    /**
+     * Subscriber will be called on UI thread, see [Dispatchers.Main].
+     *
+     * Only compatible with [EventDispatchMode.SEQUENTIAL].
+     *
+     * Usage scenarios:
+     * * The subscriber update UI components and thus must be called in the UI thread
+     * (this also means the subscriber must not be time consuming).
+     * If events are always posted from UI thread, please use [POSTING] for better performance.
+     */
+    UI,
+}
+
+val KEVENT = KEvent("DEFAULT")
+
+/**
+ * A lightweight but powerful event dispatcher.
+ *
+ * @param name name of this KEvent instance
+ * @param defaultDispatchMode default [EventDispatchMode] of this KEvent instance
+ * @param defaultThreadMode default [SubscriberThreadMode] of this KEvent instance
+ */
+class KEvent(
+    val name: String,
+    var defaultDispatchMode: EventDispatchMode = EventDispatchMode.POSTING,
+    var defaultThreadMode: SubscriberThreadMode = SubscriberThreadMode.POSTING,
+) {
 
     private val logger = KotlinLogging.logger { }
 
@@ -177,10 +187,6 @@ object KEvent {
     private val stickyEvents = Collections.synchronizedList(mutableListOf<Event<Any>>())
     private val cancelledEvents = Collections.synchronizedSet(mutableSetOf<Event<Any>>())
     private val blockedEventTypeMap = ConcurrentHashMap<Enum<*>, Boolean>()
-
-    val DEFAULT_THREAD_MODE = ThreadMode.POSTING
-    const val DEFAULT_PRIORITY = 0
-    const val DEFAULT_TAG = ""
 
     init {
         scope.launch {
@@ -197,14 +203,14 @@ object KEvent {
                     }
 
                     when (e.dispatchMode) {
-                        DispatchMode.CONCURRENT -> {
+                        EventDispatchMode.CONCURRENT -> {
                             // TODO: 2020/11/27 Improve performance, see https://github.com/Kotlin/kotlinx.coroutines/issues/2414
                             subscriberList.forEach { subscriber ->
                                 if (!dispatchEventAsync(e, subscriber)) return@forEach
                             }
                             removeCancelledEvent()
                         }
-                        DispatchMode.SEQUENTIAL -> {
+                        EventDispatchMode.SEQUENTIAL -> {
                             scope.launch {
                                 subscriberList.forEach { subscriber ->
                                     if (!dispatchEventSync(e, subscriber)) return@forEach
@@ -212,7 +218,7 @@ object KEvent {
                                 removeCancelledEvent()
                             }
                         }
-                        DispatchMode.ORDERED_CONCURRENT -> {
+                        EventDispatchMode.ORDERED_CONCURRENT -> {
                             scope.launch {
                                 subscriberList.forEach { subscriber ->
                                     if (!dispatchEventAsync(e, subscriber)) return@forEach
@@ -221,8 +227,8 @@ object KEvent {
                                 removeCancelledEvent()
                             }
                         }
-                        DispatchMode.INSTANTLY -> {
-                            logger.error { "Failed to dispatch event \"$event\": unexpected dispatch mode in event channel (\"INSTANTLY\")" }
+                        EventDispatchMode.POSTING -> {
+                            logger.error { "Failed to dispatch event \"$event\": unexpected dispatch mode in event channel (\"POSTING\")" }
                         }
                     }
                 }
@@ -236,16 +242,16 @@ object KEvent {
 
     private inline fun getDispatchContext(subscriber: Subscriber<Any>, event: Event<Any>): CoroutineContext? {
         return when (subscriber.threadMode) {
-            ThreadMode.BACKGROUND -> scope.coroutineContext
-            ThreadMode.UI -> when (event.dispatchMode) {
-                DispatchMode.SEQUENTIAL -> Dispatchers.Main
+            SubscriberThreadMode.BACKGROUND -> scope.coroutineContext
+            SubscriberThreadMode.UI -> when (event.dispatchMode) {
+                EventDispatchMode.SEQUENTIAL -> Dispatchers.Main
                 else -> {
                     logger.error { "Error happened when dispatching event \"$event\": subscriber thread mode \"UI\" is only compatible with dispatch mode \"SEQUENTIAL\"" }
                     null
                 }
             }
-            ThreadMode.POSTING -> {
-                logger.error { "Error happened when dispatching event \"$event\": subscriber thread mode \"POSTING\" is only compatible with dispatch mode \"INSTANTLY\"" }
+            SubscriberThreadMode.POSTING -> {
+                logger.error { "Error happened when dispatching event \"$event\": subscriber thread mode \"POSTING\" is only compatible with dispatch mode \"POSTING\"" }
                 null
             }
         }
@@ -287,16 +293,16 @@ object KEvent {
     fun <T : Any> post(event: Event<T>): Boolean {
         if (blockedEventTypeMap.getOrDefault(event.type, false)) return false
         event as Event<Any>
-        if (event.dispatchMode == DispatchMode.INSTANTLY) {
+        if (event.dispatchMode == EventDispatchMode.POSTING) {
             if (event.isSticky) {
-                logger.error { "Event with dispatch mode ${DispatchMode.INSTANTLY} can't be sticky: $event" }
+                logger.error { "Event with dispatch mode ${EventDispatchMode.POSTING} can't be sticky: $event" }
                 return false
             }
             val subscriberList = subscribersReadOnlyMap[event.type]?.run {
-                filter { it.threadMode == ThreadMode.POSTING }
+                filter { it.threadMode == SubscriberThreadMode.POSTING }
             }
             if (subscriberList == null || subscriberList.isEmpty()) {
-                logger.warn { "No subscribers for event type \"${event.type.name}\" with dispatch mode ${DispatchMode.INSTANTLY}" }
+                logger.warn { "No subscribers for event type \"${event.type.name}\" with dispatch mode ${EventDispatchMode.POSTING}" }
                 return false
             } else {
                 subscriberList.forEach { subscriber ->
@@ -317,7 +323,7 @@ object KEvent {
      *
      * @param type event type, must be [Enum].
      * @param data event data, can be [Any], use [Unit] if no data is needed.
-     * @param dispatchMode event dispatch mode, see [KEvent.DispatchMode], default to [KEvent.DispatchMode.INSTANTLY]
+     * @param dispatchMode event dispatch mode, see [EventDispatchMode], default to [EventDispatchMode.POSTING]
      * @param isSticky whether this event is sticky. Sticky event will be stored in the [KEvent]
      * until it get removed manually by calling [KEvent.removeStickyEvent], [KEvent.removeAllStickyEvents] or [KEvent.clear].
      * The event get dispatched normally for already existing subscribers (note that the event object received by
@@ -328,13 +334,13 @@ object KEvent {
     inline fun <T : Any> post(
         type: Enum<*>,
         data: T,
-        dispatchMode: DispatchMode = DispatchMode.INSTANTLY,
+        dispatchMode: EventDispatchMode = defaultDispatchMode,
         isSticky: Boolean = false
     ): Boolean = post(Event(type, data, dispatchMode, isSticky))
 
     /**
-     * Cancel further event dispatching, this function works with [DispatchMode.SEQUENTIAL] and [DispatchMode.INSTANTLY],
-     * and works with [DispatchMode.ORDERED_CONCURRENT] with additional requirements (cancellation need to be called instantly on subscriber invocation), but won't work with [DispatchMode.CONCURRENT]
+     * Cancel further event dispatching, this function works with [EventDispatchMode.SEQUENTIAL] and [EventDispatchMode.POSTING],
+     * and works with [EventDispatchMode.ORDERED_CONCURRENT] with additional requirements (cancellation need to be called instantly on subscriber invocation), but won't work with [EventDispatchMode.CONCURRENT]
      *
      * @return true if the event get cancelled, false if the event is already cancelled before.
      */
@@ -398,33 +404,34 @@ object KEvent {
                 }
             }
         }
+        logger.warn { "Failed to add subscriber of event type \"$eventType\": Subscribers with same eventType and consumer can only be added once" }
         return false
     }
 
     /**
-     * Add a new subscriber. Subscribers with the same [consumer] can only be added once.
+     * Add a new subscriber. Subscribers with same [eventType] and [consumer] can only be added once.
      *
      * @param eventType event type that this subscriber subscribers.
      * @param consumer event consumer function.
-     * @param threadMode thread mode, see [ThreadMode].
+     * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
      * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribe(
         eventType: Enum<*>,
-        threadMode: ThreadMode = DEFAULT_THREAD_MODE,
-        priority: Int = DEFAULT_PRIORITY,
-        tag: String = DEFAULT_TAG,
+        threadMode: SubscriberThreadMode = defaultThreadMode,
+        priority: Int = 0,
+        tag: String = "",
         consumer: EventConsumer<T>
     ): Boolean = subscribe(eventType, consumer, threadMode, priority, tag)
 
     /**
-     * Add a new subscriber. Subscribers with the same [consumer] can only be added once.
+     * Add a new subscriber. Subscribers with same [eventType] and [consumer] can only be added once.
      *
      * @param eventType event type that this subscriber subscribers.
      * @param consumer event consumer function.
-     * @param threadMode thread mode, see [ThreadMode].
+     * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
      * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
@@ -432,11 +439,11 @@ object KEvent {
     fun <T : Any> subscribe(
         eventType: Enum<*>,
         consumer: EventConsumer<T>,
-        threadMode: ThreadMode = DEFAULT_THREAD_MODE,
-        priority: Int = DEFAULT_PRIORITY,
-        tag: String = DEFAULT_TAG
+        threadMode: SubscriberThreadMode = defaultThreadMode,
+        priority: Int = 0,
+        tag: String = ""
     ): Boolean {
-        val subscriber = Subscriber(consumer, threadMode, priority, tag) as Subscriber<Any>
+        val subscriber = Subscriber(setOf(eventType), consumer, threadMode, priority, tag) as Subscriber<Any>
         val added = addSubscriber(eventType, subscriber)
         if (added) {
             synchronized(stickyEvents) {
@@ -449,30 +456,30 @@ object KEvent {
     }
 
     /**
-     * Add a new subscriber with multiple [eventTypes]. Subscribers with the same [consumer] can only be added once.
+     * Add a new subscriber with multiple [eventTypes]. Subscribers with same eventType and [consumer] can only be added once.
      *
      * @param eventTypes event types that this subscriber subscribers.
      * @param consumer event consumer function.
-     * @param threadMode thread mode, see [ThreadMode].
+     * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
      * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribeMultiple(
         eventTypes: Collection<Enum<*>>,
-        threadMode: ThreadMode = DEFAULT_THREAD_MODE,
-        priority: Int = DEFAULT_PRIORITY,
-        tag: String = DEFAULT_TAG,
+        threadMode: SubscriberThreadMode = defaultThreadMode,
+        priority: Int = 0,
+        tag: String = "",
         consumer: EventConsumer<T>
     ): Boolean = subscribeMultiple(eventTypes, consumer, threadMode, priority, tag)
 
 
     /**
-     * Add a new subscriber with multiple [eventTypes]. Subscribers with the same [consumer] can only be added once.
+     * Add a new subscriber with multiple [eventTypes]. Subscribers with same eventType and [consumer] can only be added once.
      *
      * @param eventTypes event types that this subscriber subscribers.
      * @param consumer event consumer function.
-     * @param threadMode thread mode, see [ThreadMode].
+     * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
      * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
@@ -480,11 +487,11 @@ object KEvent {
     fun <T : Any> subscribeMultiple(
         eventTypes: Collection<Enum<*>>,
         consumer: EventConsumer<T>,
-        threadMode: ThreadMode = DEFAULT_THREAD_MODE,
-        priority: Int = DEFAULT_PRIORITY,
-        tag: String = DEFAULT_TAG
+        threadMode: SubscriberThreadMode = defaultThreadMode,
+        priority: Int = 0,
+        tag: String = ""
     ): Boolean {
-        val subscriber = Subscriber(consumer, threadMode, priority, tag) as Subscriber<Any>
+        val subscriber = Subscriber(eventTypes.toSet(), consumer, threadMode, priority, tag) as Subscriber<Any>
         var added = false
         val addedEventTypes = mutableSetOf<Enum<*>>()
         eventTypes.forEach { eventType ->
@@ -573,6 +580,37 @@ object KEvent {
     }
 
     /**
+     *  Get all subscribers with event type of [eventType].
+     */
+    fun getSubscribersByEventType(eventType: Enum<*>): List<Subscriber<Any>> {
+        return subscribersReadOnlyMap[eventType]?.toList() ?: listOf()
+    }
+
+    /**
+     * Get all subscribers whose tag equals to or starts with [tag] (see [matchStart]).
+     *
+     * @param tag filter tag
+     * @param matchStart if true, returns all subscriber whose tag starts with [tag],
+     * else returns all subscriber whose tag equals to [tag]. Default to false.
+     */
+    fun getSubscribersByTag(tag: String, matchStart: Boolean = false): List<Subscriber<Any>> {
+        return subscribersReadOnlyMap.values.flatMap { it.asIterable() }.run {
+            if (matchStart) {
+                filter { it.tag.startsWith(tag) }
+            } else {
+                filter { it.tag == tag }
+            }
+        }
+    }
+
+    /**
+     * Get all subscriber.
+     */
+    fun getAllSubscribers(): List<Subscriber<Any>> {
+        return subscribersReadOnlyMap.values.flatMap { it.asIterable() }
+    }
+
+    /**
      * Remove all subscribers with event type of [eventType].
      *
      * @return true if any subscriber gets removed, else false.
@@ -615,5 +653,14 @@ object KEvent {
         removeAllStickyEvents()
         unblockAllEventTypes()
         cancelledEvents.clear()
+    }
+
+    /**
+     * Release all resources.
+     */
+    fun release() {
+        clear()
+        eventChannel.close()
+        scope.cancel()
     }
 }

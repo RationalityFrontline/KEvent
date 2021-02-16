@@ -24,7 +24,7 @@ object PerformanceBenchmark {
         val headerRow = mutableListOf<String>()
         arrayOf("AvgSubsTime", "AvgPostTime", "AvgWaitTime", "AvgCallTime").forEach {
             headerRow.add(it)
-            headerRow.addAll(arrayOf("INSTANTLY", "SEQUENTIAL", "CONCURRENT", "ORDERED_CONCURRENT", ""))
+            headerRow.addAll(arrayOf("POSTING", "SEQUENTIAL", "CONCURRENT", "ORDERED_CONCURRENT", ""))
         }
         csvRows.add(headerRow)
         csvEnabled = true
@@ -47,15 +47,15 @@ object PerformanceBenchmark {
         csvWriter().writeAll(csvRows, file)
     }
 
-    fun measureEventDispatchTime(eventNum: Int, subscriberNum: Int, dispatchMode: KEvent.DispatchMode, threadMode: KEvent.ThreadMode, isTimeConsuming: Boolean = false, isSticky: Boolean = false, enableLog: Boolean = true): Array<Float> {
-        KEvent.clear()
+    fun measureEventDispatchTime(eventNum: Int, subscriberNum: Int, dispatchMode: EventDispatchMode, threadMode: SubscriberThreadMode, isTimeConsuming: Boolean = false, isSticky: Boolean = false, enableLog: Boolean = true): Array<Float> {
+        KEVENT.clear()
         val counter = AtomicInteger(0)
 
         fun measureSubsTime(): Float {
             return if (isTimeConsuming) {
                 measureNanoTime {
                     repeat(subscriberNum) {
-                        KEvent.subscribe<Unit>(TestEventType.A, threadMode) {
+                        KEVENT.subscribe<Unit>(TestEventType.A, threadMode) {
                             sleep(10)
                             counter.getAndIncrement()
                         }
@@ -64,7 +64,7 @@ object PerformanceBenchmark {
             } else {
                 measureNanoTime {
                     repeat(subscriberNum) {
-                        KEvent.subscribe<Unit>(TestEventType.A, threadMode) {
+                        KEVENT.subscribe<Unit>(TestEventType.A, threadMode) {
                             counter.getAndIncrement()
                         }
                     }
@@ -74,7 +74,7 @@ object PerformanceBenchmark {
 
         fun measurePostTime(): Float = measureNanoTime {
             repeat(eventNum) {
-                KEvent.post(TestEventType.A, Unit, dispatchMode, isSticky)
+                KEVENT.post(TestEventType.A, Unit, dispatchMode, isSticky)
             }
         } / 1_000_000f
 
@@ -89,7 +89,7 @@ object PerformanceBenchmark {
         }
         val subscriberCalledNum = eventNum * subscriberNum
         val waitTime = waitForEventDispatch(subscriberCalledNum, counter, Int.MAX_VALUE)
-        KEvent.clear()
+        KEVENT.clear()
         val avgSubsTime = subsTime / subscriberNum
         val avgPostTime = postTime / eventNum
         val avgWaitTime = waitTime / subscriberCalledNum
@@ -117,11 +117,11 @@ object PerformanceBenchmark {
         if (enableLog) logger.info { "${"".padEnd(100, '#')}\n【Testing $eventNum events with $subscriberNum ${if (isTimeConsuming) "time consuming " else ""}subscribers】" }
         val results = mutableListOf<Array<Float>>()
         if (!skipBlocking) {
-            results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.INSTANTLY, KEvent.ThreadMode.POSTING, isTimeConsuming, enableLog = enableLog))
-            results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.SEQUENTIAL, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
+            results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.POSTING, SubscriberThreadMode.POSTING, isTimeConsuming, enableLog = enableLog))
+            results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.SEQUENTIAL, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         }
-        results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.CONCURRENT, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
-        results.add(measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.ORDERED_CONCURRENT, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
+        results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.CONCURRENT, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
+        results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.ORDERED_CONCURRENT, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         if (csvEnabled) {
             val conditions = "event-$eventNum; subs-$subscriberNum; tc-$isTimeConsuming; st-false"
             val row = mutableListOf<String>()
@@ -138,7 +138,7 @@ object PerformanceBenchmark {
 
     fun testWithStickyEvents(eventNum: Int, subscriberNum: Int, isTimeConsuming: Boolean, enableLog: Boolean = true) {
         if (enableLog) logger.info { "${"".padEnd(100, '#')}\n【Testing $eventNum sticky events with $subscriberNum ${if (isTimeConsuming) "time consuming " else ""}later added subscribers】" }
-        val results = measureEventDispatchTime(eventNum, subscriberNum, KEvent.DispatchMode.CONCURRENT, KEvent.ThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog)
+        val results = measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.CONCURRENT, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog)
         if (csvEnabled) {
             val conditions = "event-$eventNum; subs-$subscriberNum; tc-$isTimeConsuming; st-true"
             val row = mutableListOf<String>()

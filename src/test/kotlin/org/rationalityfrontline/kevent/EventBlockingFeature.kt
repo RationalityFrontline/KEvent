@@ -16,8 +16,8 @@ object EventBlockingFeature : Spek({
             counterB.set(0)
         }
 
-        beforeEachScenario { KEvent.clear() }
-        afterFeature { KEvent.clear() }
+        beforeEachScenario { KEVENT.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("blocking event") {
 
@@ -25,19 +25,19 @@ object EventBlockingFeature : Spek({
                 resetCounters()
                 for (i in 1..10) {
                     val type = if (i <= 5) TestEventType.A else TestEventType.B
-                    KEvent.subscribe<Unit>(type, KEvent.ThreadMode.POSTING) { event ->
+                    KEVENT.subscribe<Unit>(type, SubscriberThreadMode.POSTING) { event ->
                         when (event.type) {
                             TestEventType.A -> counterA.getAndIncrement()
                             TestEventType.B -> counterB.getAndIncrement()
                         }
                     }
                 }
-                KEvent.blockEventType(TestEventType.A)
+                KEVENT.blockEventType(TestEventType.A)
             }
 
             When("both type of event are posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
-                KEvent.post(TestEventType.B, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
+                KEVENT.post(TestEventType.B, Unit, EventDispatchMode.POSTING)
             }
 
             Then("only event of type B will be dispatched") {
@@ -46,12 +46,12 @@ object EventBlockingFeature : Spek({
             }
 
             And("you can also unblock the blocked event type") {
-                KEvent.unblockEventType(TestEventType.A)
+                KEVENT.unblockEventType(TestEventType.A)
             }
 
             Then("the original blocked event type can now get dispatched") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
                 assertEquals(5, counterA.get())
             }
         }

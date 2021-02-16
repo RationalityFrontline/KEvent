@@ -7,7 +7,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-private class SubscriberExample : KEventSubscriber {
+private class SubscriberExample(
+    override val KEVENT_INSTANCE: KEvent
+) : KEventSubscriber {
+
     val counter = AtomicInteger(0)
 
     fun registerSubscribers() {
@@ -39,18 +42,25 @@ private class SubscriberExample : KEventSubscriber {
 
 object SubscriberInterfaceFeature : Spek({
     Feature("KEvent comes with a helpful util interface: KEventSubscriber") {
+        val subscriber1 = SubscriberExample(KEVENT)
+        val subscriber2 = SubscriberExample(KEvent("Test Instance"))
 
-        afterFeature { KEvent.clear() }
+        beforeFeature {
+            KEVENT.clear()
+        }
+
+        afterFeature {
+            KEVENT.clear()
+            subscriber2.KEVENT_INSTANCE.release()
+        }
 
         Scenario("KEventSubscriber usage") {
-            val subscriber1 = SubscriberExample()
-            val subscriber2 = SubscriberExample()
 
             fun postEvents() {
                 subscriber1.counter.set(0)
                 subscriber2.counter.set(0)
-                KEvent.post(TestEventType.A, Unit)
-                KEvent.post(TestEventType.B, "Hello!")
+                KEVENT.post(TestEventType.A, Unit)
+                subscriber2.KEVENT_INSTANCE.post(TestEventType.B, "Hello!")
             }
 
             Given("two example subscriber instances that implement the KEventSubscriber interface") {
@@ -63,20 +73,16 @@ object SubscriberInterfaceFeature : Spek({
             }
 
             Then("subscribers should be notified") {
-                assertEquals(4, subscriber1.counter.get())
-                assertEquals(4, subscriber2.counter.get())
+                assertEquals(3, subscriber1.counter.get())
+                assertEquals(1, subscriber2.counter.get())
             }
 
             Then("now test unsubscription") {
                 subscriber1.unregisterSubscribers()
                 postEvents()
                 assertEquals(0, subscriber1.counter.get())
-                assertEquals(4, subscriber2.counter.get())
-                KEvent.removeSubscribersByEventType(TestEventType.A)
-                postEvents()
-                assertEquals(0, subscriber1.counter.get())
                 assertEquals(1, subscriber2.counter.get())
-                subscriber2.unsubscribe(TestEventType.B, subscriber2::onAnyEvent)
+                subscriber2.KEVENT_INSTANCE.removeSubscribersByEventType(TestEventType.B)
                 postEvents()
                 assertEquals(0, subscriber1.counter.get())
                 assertEquals(0, subscriber2.counter.get())

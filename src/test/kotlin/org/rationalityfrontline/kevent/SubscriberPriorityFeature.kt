@@ -21,15 +21,15 @@ object SubscriberPriorityFeature : Spek({
             counter.set(0)
         }
 
-        beforeEachScenario { KEvent.clear() }
+        beforeEachScenario { KEVENT.clear() }
         beforeEachTest { counter.set(0) }
-        afterFeature { KEvent.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("priority works with all event dispatch mode except for CONCURRENT") {
 
             Given("some subscribers with different priorities") {
                 for (i in range) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) {
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) {
                         try {
                             assertTrue { currentPriority.get() > i }
                             currentPriority.set(i)
@@ -43,7 +43,7 @@ object SubscriberPriorityFeature : Spek({
             }
 
             When("an event is posted in dispatch mode CONCURRENT") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT)
                 waitForEventDispatch(range.count(), counter)
             }
 
@@ -53,7 +53,7 @@ object SubscriberPriorityFeature : Spek({
 
             When("an event is posted in dispatch mode ORDERED_CONCURRENT") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
                 waitForEventDispatch(range.count(), counter)
             }
 
@@ -63,16 +63,16 @@ object SubscriberPriorityFeature : Spek({
 
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)
                 waitForEventDispatch(range.count(), counter)
                 assertFalse { subscriberAssertionFailed.get() }
             }
 
-            And("it's all the same when the event is posted in dispatch mode INSTANTLY") {
+            And("it's all the same when the event is posted in dispatch mode POSTING") {
                 resetCounters()
-                KEvent.clear()
+                KEVENT.clear()
                 for (i in range) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.POSTING, priority = i) {
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.POSTING, priority = i) {
                         try {
                             assertTrue { currentPriority.get() > i }
                             currentPriority.set(i)
@@ -83,7 +83,7 @@ object SubscriberPriorityFeature : Spek({
                         }
                     }
                 }
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
                 assertFalse { subscriberAssertionFailed.get() }
             }
         }

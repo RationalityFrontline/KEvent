@@ -19,9 +19,6 @@
 
 package org.rationalityfrontline.kevent
 
-import org.rationalityfrontline.kevent.KEvent.DispatchMode
-import org.rationalityfrontline.kevent.KEvent.ThreadMode
-
 /**
  * Convenient interface for adding and removing subscribers
  */
@@ -29,72 +26,73 @@ interface KEventSubscriber {
     /**
      * The subscription tag of this object.
      */
-    val SUBSCRIPTION_TAG: String get() = "${this::class.java.simpleName}@${this.hashCode()}"
+    val SUBSCRIBER_TAG: String get() = "${this::class.java.simpleName}@${this.hashCode()}"
+    val KEVENT_INSTANCE: KEvent get() = KEVENT
 }
 
 /**
- * Add a new subscriber with tag of [SUBSCRIPTION_TAG]. Subscribers with the same [consumer] can only be added once.
+ * Add a new subscriber with tag of [KEventSubscriber.SUBSCRIBER_TAG]. Subscribers with same [eventType] and [consumer] can only be added once.
  *
  * @param eventType event type that this subscriber subscribers.
  * @param consumer event consumer function.
- * @param threadMode thread mode, see [ThreadMode].
+ * @param threadMode thread mode, see [SubscriberThreadMode].
  * @param priority priority, bigger is higher.
  * @return true if subscription is successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.subscribe(
     eventType: Enum<*>,
-    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
-    priority: Int = KEvent.DEFAULT_PRIORITY,
+    threadMode: SubscriberThreadMode = KEVENT_INSTANCE.defaultThreadMode,
+    priority: Int = 0,
     noinline consumer: EventConsumer<T>
-): Boolean = KEvent.subscribe(eventType, threadMode, priority, SUBSCRIPTION_TAG, consumer)
+): Boolean = KEVENT_INSTANCE.subscribe(eventType, threadMode, priority, SUBSCRIBER_TAG, consumer)
 
 /**
- * Add a new subscriber with tag of [SUBSCRIPTION_TAG]. Subscribers with the same [consumer] can only be added once.
+ * Add a new subscriber with tag of [KEventSubscriber.SUBSCRIBER_TAG]. Subscribers with same [eventType] and [consumer] can only be added once.
  *
  * @param eventType event type that this subscriber subscribers.
  * @param consumer event consumer function.
- * @param threadMode thread mode, see [ThreadMode].
+ * @param threadMode thread mode, see [SubscriberThreadMode].
  * @param priority priority, bigger is higher.
  * @return true if subscription is successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.subscribe(
     eventType: Enum<*>,
     noinline consumer: EventConsumer<T>,
-    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
-    priority: Int = KEvent.DEFAULT_PRIORITY
-): Boolean = KEvent.subscribe(eventType, consumer, threadMode, priority, SUBSCRIPTION_TAG)
+    threadMode: SubscriberThreadMode = KEVENT_INSTANCE.defaultThreadMode,
+    priority: Int = 0
+): Boolean = KEVENT_INSTANCE.subscribe(eventType, consumer, threadMode, priority, SUBSCRIBER_TAG)
 
 /**
- * Add a new subscriber with multiple [eventTypes] and tag of [SUBSCRIPTION_TAG]. Subscribers with the same [consumer] can only be added once.
+ * Add a new subscriber with multiple [eventTypes] and tag of [KEventSubscriber.SUBSCRIBER_TAG]. Subscribers with same eventType and [consumer] can only be added once.
  *
  * @param eventTypes event types that this subscriber subscribers.
  * @param consumer event consumer function.
- * @param threadMode thread mode, see [ThreadMode].
+ * @param threadMode thread mode, see [SubscriberThreadMode].
  * @param priority priority, bigger is higher.
  * @return true if subscription is successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.subscribeMultiple(
     eventTypes: Collection<Enum<*>>,
-    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
-    priority: Int = KEvent.DEFAULT_PRIORITY,
+    threadMode: SubscriberThreadMode = KEVENT_INSTANCE.defaultThreadMode,
+    priority: Int = 0,
     noinline consumer: EventConsumer<T>
-): Boolean = KEvent.subscribeMultiple(eventTypes, threadMode, priority, SUBSCRIPTION_TAG, consumer)
+): Boolean = KEVENT_INSTANCE.subscribeMultiple(eventTypes, threadMode, priority, SUBSCRIBER_TAG, consumer)
 
 /**
- * Add a new subscriber with multiple [eventTypes] and tag of [SUBSCRIPTION_TAG]. Subscribers with the same [consumer] can only be added once.
+ * Add a new subscriber with multiple [eventTypes] and tag of [KEventSubscriber.SUBSCRIBER_TAG]. Subscribers with same eventType and [consumer] can only be added once.
  *
  * @param eventTypes event types that this subscriber subscribers.
  * @param consumer event consumer function.
- * @param threadMode thread mode, see [ThreadMode].
+ * @param threadMode thread mode, see [SubscriberThreadMode].
  * @param priority priority, bigger is higher.
  * @return true if subscription is successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.subscribeMultiple(
     eventTypes: Collection<Enum<*>>,
     noinline consumer: EventConsumer<T>,
-    threadMode: ThreadMode = KEvent.DEFAULT_THREAD_MODE,
-    priority: Int = KEvent.DEFAULT_PRIORITY,
-): Boolean = KEvent.subscribeMultiple(eventTypes, consumer, threadMode, priority, SUBSCRIPTION_TAG)
+    threadMode: SubscriberThreadMode = KEVENT_INSTANCE.defaultThreadMode,
+    priority: Int = 0,
+): Boolean = KEVENT_INSTANCE.subscribeMultiple(eventTypes, consumer, threadMode, priority, SUBSCRIBER_TAG)
 
 /**
  * Unsubscribe the subscriber with [eventType] and [consumer].
@@ -104,7 +102,7 @@ inline fun <T : Any> KEventSubscriber.subscribeMultiple(
 inline fun <T : Any> KEventSubscriber.unsubscribe(
     eventType: Enum<*>,
     noinline consumer: EventConsumer<T>
-): Boolean = KEvent.unsubscribe(eventType, consumer)
+): Boolean = KEVENT_INSTANCE.unsubscribe(eventType, consumer)
 
 /**
  * Unsubscribe the subscriber with [eventTypes] and [consumer].
@@ -114,18 +112,18 @@ inline fun <T : Any> KEventSubscriber.unsubscribe(
 inline fun <T : Any> KEventSubscriber.unsubscribeMultiple(
     eventTypes: Collection<Enum<*>>,
     noinline consumer: EventConsumer<T>
-): Boolean = KEvent.unsubscribeMultiple(eventTypes, consumer)
+): Boolean = KEVENT_INSTANCE.unsubscribeMultiple(eventTypes, consumer)
 
 /**
- * Unsubscribe all subscribers with tag of [SUBSCRIPTION_TAG].
+ * Unsubscribe all subscribers with tag of [KEventSubscriber.SUBSCRIBER_TAG].
  *
  * @return true if subscriber exists and any of the unsubscription is successful, else false.
  */
-inline fun KEventSubscriber.unsubscribeAll(): Boolean = KEvent.removeSubscribersByTag(SUBSCRIPTION_TAG)
+inline fun KEventSubscriber.unsubscribeAll(): Boolean = KEVENT_INSTANCE.removeSubscribersByTag(SUBSCRIBER_TAG)
 
 /**
- * Cancel further event dispatching, this should only be used together with [DispatchMode.SEQUENTIAL] or [DispatchMode.INSTANTLY].
+ * Cancel further event dispatching, this should only be used together with [EventDispatchMode.SEQUENTIAL] or [EventDispatchMode.POSTING].
  *
  * @return true if the event get cancelled, false if the event is already cancelled before.
  */
-inline fun <T : Any> KEventSubscriber.cancelEvent(event: Event<T>): Boolean = KEvent.cancelEvent(event)
+inline fun <T : Any> KEventSubscriber.cancelEvent(event: Event<T>): Boolean = KEVENT_INSTANCE.cancelEvent(event)

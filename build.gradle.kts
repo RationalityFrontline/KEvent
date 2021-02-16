@@ -1,26 +1,24 @@
-import com.jfrog.bintray.gradle.BintrayExtension.PackageConfig
-import com.jfrog.bintray.gradle.BintrayExtension.VersionConfig
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
-import java.util.*
 
 plugins {
 	kotlin("jvm") version "1.4.20"
     `java-library`
     `maven-publish`
+    signing
     id("org.jetbrains.dokka") version "1.4.10"
     id("org.javamodularity.moduleplugin") version "1.7.0"
-    id("com.jfrog.bintray") version "1.8.5"
 }
 
 group = "org.rationalityfrontline"
-version = "1.0.0"
-val SDK_NAME = "KEvent"
-val SDK_VERSION = version.toString()
+version = "2.0.0"
+val NAME = "kevent"
+val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
+val GITHUB_REPO = "RationalityFrontline/kevent"
 
 repositories {
+    mavenCentral()
     jcenter()
 }
-
 
 dependencies {
     val coroutinesVersion = "1.4.2"
@@ -53,6 +51,7 @@ tasks {
         }
     }
     test {
+        testLogging.showStandardStreams = true
         useJUnitPlatform {
             doFirst {
                 classpath.forEach { it.mkdirs() }
@@ -61,7 +60,8 @@ tasks {
                 "--add-exports", "org.junit.platform.commons/org.junit.platform.commons.util=ALL-UNNAMED",
                 "--add-exports", "org.junit.platform.commons/org.junit.platform.commons.logging=ALL-UNNAMED",
                 "--add-reads", "kevent=spek.dsl.jvm",
-                "--add-reads", "kevent=kotlin.test"
+                "--add-reads", "kevent=kotlin.test",
+                "--add-reads", "kevent=java.desktop"
             )
             includeEngines("spek2")
         }
@@ -76,19 +76,16 @@ tasks {
     }
 }
 
-val NAME = "kevent"
-val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
-val GITHUB_REPO = "RationalityFrontline/kevent"
-
 publishing {
     publications {
-        create<MavenPublication>("mavenPublish") {
+        create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["javadocJar"])
             pom {
                 name.set(NAME)
-                description.set("$NAME ${project.version} - $DESC")
+                description.set(DESC)
+                packaging = "jar"
                 url.set("https://github.com/$GITHUB_REPO")
                 licenses {
                     license {
@@ -100,44 +97,36 @@ publishing {
                     developer {
                         name.set("RationalityFrontline")
                         email.set("rationalityfrontline@gmail.com")
+                        organization.set("RationalityFrontline")
+                        organizationUrl.set("https://github.com/RationalityFrontline")
                     }
                 }
                 scm {
-                    url.set("https://github.com/$GITHUB_REPO")
+                    connection.set("scm:git:git://github.com/$GITHUB_REPO.git")
+                    developerConnection.set("scm:git:ssh://github.com:$GITHUB_REPO.git")
+                    url.set("https://github.com/$GITHUB_REPO/tree/master")
                 }
+            }
+        }
+    }
+    repositories {
+        fun env(propertyName: String): String {
+            return if (project.hasProperty(propertyName)) {
+                project.property(propertyName) as String
+            } else "Unknown"
+        }
+        maven {
+            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            credentials {
+                username = env("ossrhUsername")
+                password = env("ossrhPassword")
             }
         }
     }
 }
 
-bintray {
-    fun env(propertyName: String): String {
-        return if (project.hasProperty(propertyName)) {
-            project.property(propertyName) as String
-        } else "Unknown"
-    }
-
-    user = env("BINTRAY_USER")
-    key = env("BINTRAY_KEY")
-    publish = true
-    override = true
-    setPublications("mavenPublish")
-    pkg(closureOf<PackageConfig>{
-        repo = "kevent"
-        name = if (project.version.toString().contains("dev")) "$NAME-dev" else NAME
-        desc = DESC
-        setLabels("kotlin", "eventbus", "event dispatcher", "event driven", "android", "swing", "javafx")
-        setLicenses("Apache-2.0")
-        publicDownloadNumbers = true
-        githubRepo = GITHUB_REPO
-        vcsUrl = "https://github.com/$githubRepo"
-        websiteUrl = vcsUrl
-        issueTrackerUrl = "$vcsUrl/issues"
-        version(closureOf<VersionConfig> {
-            name = "${project.version}"
-            desc = DESC
-            released = "${Date()}"
-            vcsTag = name
-        })
-    })
+signing {
+    sign(publishing.publications["maven"])
 }

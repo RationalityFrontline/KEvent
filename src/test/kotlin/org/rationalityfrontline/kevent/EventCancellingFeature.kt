@@ -13,25 +13,25 @@ object EventCancellingFeature : Spek({
 
         val counter by memoized { AtomicInteger(0) }
 
-        beforeEachScenario { KEvent.clear() }
-        afterFeature { KEvent.clear() }
+        beforeEachScenario { KEVENT.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("cancelling event") {
 
             Given("some subscribers with different priorities") {
                 counter.set(0)
                 for (i in 1..10) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.POSTING, priority = i) { event ->
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.POSTING, priority = i) { event ->
                         if (i == 6) {
-                            KEvent.cancelEvent(event)
+                            KEVENT.cancelEvent(event)
                         }
                         counter.getAndIncrement()
                     }
                 }
             }
 
-            When("an event is posted in dispatch mode INSTANTLY") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
+            When("an event is posted in dispatch mode POSTING") {
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
             }
 
             Then("the event won't be further dispatched after it get cancelled") {
@@ -40,16 +40,16 @@ object EventCancellingFeature : Spek({
 
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 counter.set(0)
-                KEvent.clear()
+                KEVENT.clear()
                 for (i in 1..100) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) { event ->
                         if (i == 51) {
-                            KEvent.cancelEvent(event)
+                            KEVENT.cancelEvent(event)
                         }
                         counter.getAndIncrement()
                     }
                 }
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)
                 assertFailsWith(TimeoutException::class) {
                     waitForEventDispatch(100, counter, timeouts = 30)
                 }
@@ -58,24 +58,24 @@ object EventCancellingFeature : Spek({
 
             And("it doesn't work with event dispatch mode CONCURRENT") {
                 counter.set(0)
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT)
                 sleep(30)
                 assertNotEquals(50, counter.get())
             }
 
             And("it works with event dispatch mode ORDERED_CONCURRENT when cancellation is called instantly on subscriber invocation") {
                 counter.set(0)
-                KEvent.clear()
+                KEVENT.clear()
                 for (i in 1..100) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) { event ->
                         if (i == 51) {
-                            KEvent.cancelEvent(event)
+                            KEVENT.cancelEvent(event)
                         }
                         sleep(10)
                         counter.getAndIncrement()
                     }
                 }
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
                 assertFailsWith(TimeoutException::class) {
                     waitForEventDispatch(100, counter, timeouts = 1500)
                 }
@@ -84,17 +84,17 @@ object EventCancellingFeature : Spek({
 
             And("it doesn't work with event dispatch mode ORDERED_CONCURRENT when cancellation is not called instantly on subscriber invocation") {
                 counter.set(0)
-                KEvent.clear()
+                KEVENT.clear()
                 for (i in 1..100) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND, priority = i) { event ->
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) { event ->
                         sleep(10)
                         if (i == 51) {
-                            KEvent.cancelEvent(event)
+                            KEVENT.cancelEvent(event)
                         }
                         counter.getAndIncrement()
                     }
                 }
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
                 sleep(1500)
                 assertNotEquals(50, counter.get())
             }

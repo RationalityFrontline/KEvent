@@ -22,31 +22,31 @@ private class Temp {
 object BasicFeature : Spek({
     Feature("Basic subscription, unsubscription and posting events") {
 
-        beforeEachScenario { KEvent.clear() }
-        afterFeature { KEvent.clear() }
+        beforeEachScenario { KEVENT.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("basic usage") {
 
             fun postEvents() {
                 counter.set(0)
-                KEvent.post(TestEventType.A, Unit)
-                val eventB = Event(TestEventType.B, "Hello!")
-                KEvent.post(eventB)
+                KEVENT.post(TestEventType.A, Unit)
+                val eventB = Event(TestEventType.B, "Hello!", EventDispatchMode.POSTING)
+                KEVENT.post(eventB)
             }
 
             Given("KEvent") {
-                KEvent.clear()
+                KEVENT.clear()
             }
 
             Then("you can add subscribers in many ways") {
-                KEvent.subscribe<Unit>(TestEventType.A, tag = "lambda") {
+                KEVENT.subscribe<Unit>(TestEventType.A, tag = "lambda") {
                     counter.getAndIncrement()
                 }
-                assertTrue { KEvent.subscribe(TestEventType.B, ::onStringEvent) }
-                assertFalse { KEvent.subscribe(TestEventType.B, ::onStringEvent) }
-                KEvent.subscribe(TestEventType.B, BasicFeature::onStringEvent)
-                KEvent.subscribe(TestEventType.B, Temp()::onStringEvent)
-                KEvent.subscribeMultiple<Any>(setOf(TestEventType.A, TestEventType.B)) { event ->
+                assertTrue { KEVENT.subscribe(TestEventType.B, ::onStringEvent) }
+                assertFalse { KEVENT.subscribe(TestEventType.B, ::onStringEvent) }
+                KEVENT.subscribe(TestEventType.B, BasicFeature::onStringEvent)
+                KEVENT.subscribe(TestEventType.B, Temp()::onStringEvent)
+                KEVENT.subscribeMultiple<Any>(setOf(TestEventType.A, TestEventType.B)) { event ->
                     when (event.type) {
                         TestEventType.A -> {
                             event.data as Unit
@@ -57,7 +57,11 @@ object BasicFeature : Spek({
                     }
                     counter.getAndIncrement()
                 }
-                KEvent.subscribeMultiple(setOf(TestEventType.A, TestEventType.B), BasicFeature::onMultipleEvent)
+                KEVENT.subscribeMultiple(setOf(TestEventType.A, TestEventType.B), BasicFeature::onMultipleEvent)
+                assertEquals(3, KEVENT.getSubscribersByEventType(TestEventType.A).size)
+                assertEquals(5, KEVENT.getSubscribersByEventType(TestEventType.B).size)
+                assertEquals(1, KEVENT.getSubscribersByTag("lambda").size)
+                assertEquals(8, KEVENT.getAllSubscribers().size)
             }
 
             Then("now it's time to post events") {
@@ -69,16 +73,16 @@ object BasicFeature : Spek({
             }
 
             Then("now let's remove these subscribers") {
-                assertTrue { KEvent.removeSubscribersByTag("lambda") }
-                assertTrue { KEvent.unsubscribe(TestEventType.B, ::onStringEvent) }
-                assertTrue { KEvent.unsubscribe(TestEventType.B, BasicFeature::onStringEvent) }
-                assertTrue { KEvent.unsubscribeMultiple(setOf(TestEventType.A, TestEventType.B), BasicFeature::onMultipleEvent) }
+                assertTrue { KEVENT.removeSubscribersByTag("lambda") }
+                assertTrue { KEVENT.unsubscribe(TestEventType.B, ::onStringEvent) }
+                assertTrue { KEVENT.unsubscribe(TestEventType.B, BasicFeature::onStringEvent) }
+                assertTrue { KEVENT.unsubscribeMultiple(setOf(TestEventType.A, TestEventType.B), BasicFeature::onMultipleEvent) }
                 postEvents()
                 assertEquals(3, counter.get())
-                assertTrue { KEvent.removeSubscribersByEventType(TestEventType.B) }
+                assertTrue { KEVENT.removeSubscribersByEventType(TestEventType.B) }
                 postEvents()
                 assertEquals(1, counter.get())
-                KEvent.removeAllSubscribers()
+                KEVENT.removeAllSubscribers()
             }
 
             Then("no subscriber will be notified now") {

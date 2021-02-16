@@ -18,16 +18,16 @@ import kotlin.test.assertTrue
 
 
 object ThreadingFeature : Spek({
-    Feature("KEvent supports four event dispatch modes (INSTANTLY, SEQUENTIAL, CONCURRENT, ORDERED_CONCURRENT) and three subscriber thread modes (POSTING, BACKGROUND, UI)") {
+    Feature("KEvent supports four event dispatch modes (POSTING, SEQUENTIAL, CONCURRENT, ORDERED_CONCURRENT) and three subscriber thread modes (POSTING, BACKGROUND, UI)") {
 
         val counter by memoized { AtomicInteger(0) }
         val calledThreadModesMap by memoized {
-            ConcurrentHashMap<KEvent.ThreadMode, Boolean>().apply {
+            ConcurrentHashMap<SubscriberThreadMode, Boolean>().apply {
                 putAll(
                     mapOf(
-                        KEvent.ThreadMode.POSTING to false,
-                        KEvent.ThreadMode.BACKGROUND to false,
-                        KEvent.ThreadMode.UI to false,
+                        SubscriberThreadMode.POSTING to false,
+                        SubscriberThreadMode.BACKGROUND to false,
+                        SubscriberThreadMode.UI to false,
                     )
                 )
             }
@@ -45,10 +45,10 @@ object ThreadingFeature : Spek({
             runBlocking(Dispatchers.Main) {
                 jlabel.text = "0"
             }
-            KEvent.ThreadMode.values().forEach { threadMode ->
-                KEvent.subscribe<Unit>(TestEventType.A, threadMode) { event ->
+            SubscriberThreadMode.values().forEach { threadMode ->
+                KEVENT.subscribe<Unit>(TestEventType.A, threadMode) { event ->
                     when (threadMode) {
-                        KEvent.ThreadMode.UI -> {
+                        SubscriberThreadMode.UI -> {
                             if (SwingUtilities.isEventDispatchThread()) {
                                 jlabel.text = "Received event: $event"
                                 calledThreadModesMap[threadMode] = true
@@ -86,69 +86,69 @@ object ThreadingFeature : Spek({
             }
         }
         beforeEachScenario {
-            KEvent.clear()
+            KEVENT.clear()
             addAllKindsOfSubscribers()
         }
         afterFeature {
             jframe.dispatchEvent(WindowEvent(jframe, WindowEvent.WINDOW_CLOSING))
-            KEvent.clear()
+            KEVENT.clear()
         }
 
-        Scenario("INSTANTLY: only compatible with POSTING") {
+        Scenario("POSTING: only compatible with POSTING") {
 
             When("an event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
             }
 
             Then("only subscribers whose thread mode is POSTING will be notified") {
-                assertTrue { calledThreadModesMap[KEvent.ThreadMode.POSTING]!! }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.BACKGROUND]!! }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.UI]!! }
+                assertTrue { calledThreadModesMap[SubscriberThreadMode.POSTING]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.BACKGROUND]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.UI]!! }
             }
         }
 
         Scenario("SEQUENTIAL: compatible with BACKGROUND and UI") {
             When("an event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)
             }
 
             Then("only subscribers whose thread mode is BACKGROUND or UI will be notified") {
                 assertFailsWith(TimeoutException::class) {
                     waitForEventDispatch(3, counter, 30)
                 }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.POSTING]!! }
-                assertTrue { calledThreadModesMap[KEvent.ThreadMode.BACKGROUND]!! }
-                assertTrue { calledThreadModesMap[KEvent.ThreadMode.UI]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.POSTING]!! }
+                assertTrue { calledThreadModesMap[SubscriberThreadMode.BACKGROUND]!! }
+                assertTrue { calledThreadModesMap[SubscriberThreadMode.UI]!! }
             }
         }
 
         Scenario("CONCURRENT: only compatible with BACKGROUND") {
             When("an event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT)
             }
 
             Then("only subscribers whose thread mode is BACKGROUND will be notified") {
                 assertFailsWith(TimeoutException::class) {
                     waitForEventDispatch(3, counter, 30)
                 }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.POSTING]!! }
-                assertTrue { calledThreadModesMap[KEvent.ThreadMode.BACKGROUND]!! }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.UI]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.POSTING]!! }
+                assertTrue { calledThreadModesMap[SubscriberThreadMode.BACKGROUND]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.UI]!! }
             }
         }
 
         Scenario("ORDERED_CONCURRENT: only compatible with BACKGROUND") {
             When("an event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
             }
 
             Then("only subscribers whose thread mode is BACKGROUND will be notified") {
                 assertFailsWith(TimeoutException::class) {
                     waitForEventDispatch(3, counter, 30)
                 }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.POSTING]!! }
-                assertTrue { calledThreadModesMap[KEvent.ThreadMode.BACKGROUND]!! }
-                assertFalse { calledThreadModesMap[KEvent.ThreadMode.UI]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.POSTING]!! }
+                assertTrue { calledThreadModesMap[SubscriberThreadMode.BACKGROUND]!! }
+                assertFalse { calledThreadModesMap[SubscriberThreadMode.UI]!! }
             }
         }
     }

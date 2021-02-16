@@ -1,7 +1,5 @@
 package org.rationalityfrontline.kevent
 
-import java.lang.ClassCastException
-
 enum class EventTypes {
     UNIT_EVENT,
     STRING_EVENT,
@@ -13,10 +11,12 @@ private class ExampleSubscriber : KEventSubscriber {
             println("${"ExampleSubscriber.lambda".padEnd(35)}: $event")
         }
         subscribe(EventTypes.STRING_EVENT, ::onStringEvent)
-        subscribeMultiple(listOf(
-            EventTypes.UNIT_EVENT,
-            EventTypes.STRING_EVENT,
-        ), ::onAnyEvent)
+        subscribeMultiple(
+            listOf(
+                EventTypes.UNIT_EVENT,
+                EventTypes.STRING_EVENT,
+            ), ::onAnyEvent
+        )
     }
 
     fun unregisterSubscribers() {
@@ -45,20 +45,20 @@ private fun topLevelOnStringEvent(event: Event<String>) {
 }
 
 fun main() {
-    KEvent.subscribe<Unit>(EventTypes.UNIT_EVENT, tag = "main") { event ->
+    KEVENT.subscribe<Unit>(EventTypes.UNIT_EVENT, tag = "main") { event ->
         println("${"main.lambda".padEnd(35)}: $event")
     }
-    KEvent.subscribe(EventTypes.STRING_EVENT, ::topLevelOnStringEvent)
+    KEVENT.subscribe(EventTypes.STRING_EVENT, ::topLevelOnStringEvent)
 
     val subscriber = ExampleSubscriber()
     subscriber.registerSubscribers()
 
-    KEvent.post(EventTypes.UNIT_EVENT, Unit)
-    KEvent.post(EventTypes.STRING_EVENT, "KEvent is awesome!")
-    KEvent.post(EventTypes.STRING_EVENT, 42)
+    KEVENT.post(EventTypes.UNIT_EVENT, Unit)
+    KEVENT.post(EventTypes.STRING_EVENT, "KEvent is awesome!")
+    KEVENT.post(EventTypes.STRING_EVENT, 42)
 
     subscriber.unregisterSubscribers()
 
-    KEvent.removeSubscribersByTag("main")
-    KEvent.unsubscribe(EventTypes.STRING_EVENT, ::topLevelOnStringEvent)
+    KEVENT.removeSubscribersByTag("main")
+    KEVENT.unsubscribe(EventTypes.STRING_EVENT, ::topLevelOnStringEvent)
 }

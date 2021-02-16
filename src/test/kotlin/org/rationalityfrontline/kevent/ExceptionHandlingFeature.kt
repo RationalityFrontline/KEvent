@@ -18,16 +18,16 @@ object ExceptionHandlingFeature : Spek({
         }
 
         beforeEachScenario {
-            KEvent.clear()
+            KEVENT.clear()
             resetCounters()
         }
-        afterFeature { KEvent.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("a subscriber throws an exception") {
 
             Given("multiple normal subscribers and one exception throwing subscriber") {
                 for (i in 1..10) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) {
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) {
                         counter.getAndIncrement()
                         if (i == 5) {
                             exceptionThrowingSubscriberInvokedTimes.getAndIncrement()
@@ -45,7 +45,7 @@ object ExceptionHandlingFeature : Spek({
             }
 
             When("an event is posted in dispatch mode CONCURRENT") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT)
                 waitForEventDispatch(10, counter)
             }
 
@@ -55,23 +55,23 @@ object ExceptionHandlingFeature : Spek({
 
             And("it's all the same when the event is posted in dispatch mode ORDERED_CONCURRENT") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.ORDERED_CONCURRENT)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
                 waitForEventDispatch(10, counter)
                 assertSubscribersCalledCorrectly()
             }
 
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.SEQUENTIAL)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)
                 waitForEventDispatch(10, counter)
                 assertSubscribersCalledCorrectly()
             }
 
-            And("it's all the same when the event is posted in dispatch mode INSTANTLY") {
-                KEvent.clear()
+            And("it's all the same when the event is posted in dispatch mode POSTING") {
+                KEVENT.clear()
                 resetCounters()
                 for (i in 1..10) {
-                    KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.POSTING) {
+                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.POSTING) {
                         if (i == 5) {
                             exceptionThrowingSubscriberInvokedTimes.getAndIncrement()
                             throw Exception("I am the trouble maker")
@@ -80,7 +80,7 @@ object ExceptionHandlingFeature : Spek({
                         }
                     }
                 }
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
                 assertSubscribersCalledCorrectly()
             }
         }

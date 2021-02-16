@@ -16,8 +16,8 @@ object SubscriberTagFeature : Spek({
             counterEven.set(0)
         }
 
-        beforeEachScenario { KEvent.clear() }
-        afterFeature { KEvent.clear() }
+        beforeEachScenario { KEVENT.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("tagging subscribers") {
 
@@ -26,7 +26,7 @@ object SubscriberTagFeature : Spek({
                 for (i in 1..10) {
                     val tag = if (i % 2 == 1) "odd" else "even"
                     val type = if (i <= 5) TestEventType.A else TestEventType.B
-                    KEvent.subscribe<Unit>(type, KEvent.ThreadMode.POSTING, tag = tag) {
+                    KEVENT.subscribe<Unit>(type, SubscriberThreadMode.POSTING, tag = tag) {
                         when (tag) {
                             "odd" -> counterOdd.getAndIncrement()
                             "even" -> counterEven.getAndIncrement()
@@ -36,8 +36,8 @@ object SubscriberTagFeature : Spek({
             }
 
             When("both type of event are posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
-                KEvent.post(TestEventType.B, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
+                KEVENT.post(TestEventType.B, Unit, EventDispatchMode.POSTING)
             }
 
             Then("all subscribers will be notified") {
@@ -46,13 +46,13 @@ object SubscriberTagFeature : Spek({
             }
 
             Then("if you remove all subscribers of tag 'odd'") {
-                KEvent.removeSubscribersByTag("odd")
+                KEVENT.removeSubscribersByTag("odd")
             }
 
             Then("only subscribers of tag 'even' will get notified") {
                 resetCounters()
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY)
-                KEvent.post(TestEventType.B, Unit, KEvent.DispatchMode.INSTANTLY)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING)
+                KEVENT.post(TestEventType.B, Unit, EventDispatchMode.POSTING)
                 assertEquals(0, counterOdd.get())
                 assertEquals(5, counterEven.get())
             }

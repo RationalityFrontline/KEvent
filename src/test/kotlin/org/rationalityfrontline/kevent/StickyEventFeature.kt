@@ -21,7 +21,7 @@ object StickyEventFeature : Spek({
             try {
                 existingSubscriberCalled.set(true)
                 assertFalse { event.isSticky }
-                assertTrue { event.isPostedSticky }
+                assertTrue { event.isPostedSticky(KEVENT) }
             } catch (e: AssertionError) {
                 subscriberAssertionFailed.set(true)
             } finally {
@@ -37,20 +37,20 @@ object StickyEventFeature : Spek({
         }
 
         beforeEachScenario {
-            KEvent.clear()
+            KEVENT.clear()
             resetCounters()
         }
         beforeEachTest { counter.set(0) }
-        afterFeature { KEvent.clear() }
+        afterFeature { KEVENT.clear() }
 
         Scenario("basic sticky event usage") {
 
             Given("an existing subscriber") {
-                KEvent.subscribe(TestEventType.A, existingSubscriber, KEvent.ThreadMode.BACKGROUND)
+                KEVENT.subscribe(TestEventType.A, existingSubscriber, SubscriberThreadMode.BACKGROUND)
             }
 
             When("a sticky event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT, isSticky = true)
                 waitForEventDispatch(1, counter)
             }
 
@@ -61,11 +61,11 @@ object StickyEventFeature : Spek({
             }
 
             Then("later added subscribers are called on their subscription (with event object whose isSticky is true and isPostedSticky is true)") {
-                KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) { event ->
+                KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) { event ->
                     try {
                         laterAddedSubscriberCalled.set(true)
                         assertTrue { event.isSticky }
-                        assertTrue { event.isPostedSticky }
+                        assertTrue { event.isPostedSticky(KEVENT) }
                     } catch (e: AssertionError) {
                         subscriberAssertionFailed.set(true)
                     } finally {
@@ -78,16 +78,16 @@ object StickyEventFeature : Spek({
             }
 
             Then("sticky event can be removed (only once)") {
-                KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) { event ->
+                KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) { event ->
                     try {
                         assertTrue { event.isSticky }
-                        assertTrue { event.isPostedSticky }
-                        assertTrue { KEvent.containsStickyEvent(event) }
-                        assertTrue { KEvent.removeStickyEvent(event) }
-                        assertFalse { KEvent.removeStickyEvent(event) }
-                        assertFalse { KEvent.containsStickyEvent(event) }
+                        assertTrue { event.isPostedSticky(KEVENT) }
+                        assertTrue { KEVENT.containsStickyEvent(event) }
+                        assertTrue { KEVENT.removeStickyEvent(event) }
+                        assertFalse { KEVENT.removeStickyEvent(event) }
+                        assertFalse { KEVENT.containsStickyEvent(event) }
                         assertTrue { event.isSticky }
-                        assertFalse { event.isPostedSticky }
+                        assertFalse { event.isPostedSticky(KEVENT) }
                     } catch (e: AssertionError) {
                         subscriberAssertionFailed.set(true)
                     } finally {
@@ -99,7 +99,7 @@ object StickyEventFeature : Spek({
             }
 
             Then("later added subscriber won't receive the removed sticky event") {
-                KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) {
+                KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) {
                     counter.getAndIncrement()
                 }
                 assertFailsWith(TimeoutException::class) {
@@ -108,19 +108,19 @@ object StickyEventFeature : Spek({
             }
         }
 
-        Scenario("sticky event can't be used together with event dispatch mode INSTANTLY") {
+        Scenario("sticky event can't be used together with event dispatch mode POSTING") {
 
             Given("an existing subscriber") {
-                KEvent.subscribe(TestEventType.A, existingSubscriber, KEvent.ThreadMode.POSTING)
+                KEVENT.subscribe(TestEventType.A, existingSubscriber, SubscriberThreadMode.POSTING)
             }
 
-            When("a sticky event is posted with dispatch mode INSTANTLY") {
-                assertFalse { KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.INSTANTLY, isSticky = true) }
+            When("a sticky event is posted with dispatch mode POSTING") {
+                assertFalse { KEVENT.post(TestEventType.A, Unit, EventDispatchMode.POSTING, isSticky = true) }
             }
 
             Then("the event won't get dispatched to any subscribers") {
                 assertFalse { existingSubscriberCalled.get() }
-                KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) {
+                KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) {
                     counter.getAndIncrement()
                 }
                 assertFailsWith(TimeoutException::class) {
@@ -132,7 +132,7 @@ object StickyEventFeature : Spek({
         Scenario("sticky events are dispatched to later added subscribers concurrently and asynchronously") {
 
             When("a sticky event is posted") {
-                KEvent.post(TestEventType.A, Unit, KEvent.DispatchMode.CONCURRENT, isSticky = true)
+                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.CONCURRENT, isSticky = true)
             }
 
             Then(
@@ -144,7 +144,7 @@ object StickyEventFeature : Spek({
                 val currentOrder = AtomicInteger(0)
                 val dispatchTime = measureTimeMillis {
                     for (i in 1..1000) {
-                        KEvent.subscribe<Unit>(TestEventType.A, KEvent.ThreadMode.BACKGROUND) {
+                        KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND) {
                             if (currentOrder.get() > i) {
                                 unordered.set(true)
                             }
