@@ -1,32 +1,32 @@
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 
 plugins {
-	kotlin("jvm") version "1.4.20"
+	kotlin("jvm") version "1.5.21"
     `java-library`
     `maven-publish`
     signing
-    id("org.jetbrains.dokka") version "1.4.10"
-    id("org.javamodularity.moduleplugin") version "1.7.0"
+    id("org.jetbrains.dokka") version "1.5.0"
+    id("org.javamodularity.moduleplugin") version "1.8.7"
 }
 
 group = "org.rationalityfrontline"
-version = "2.0.0"
+version = "2.0.1"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
 
 repositories {
     mavenCentral()
-    jcenter()
+//    jcenter()
 }
 
 dependencies {
-    val coroutinesVersion = "1.4.2"
+    val coroutinesVersion = "1.5.1"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
-    implementation("io.github.microutils:kotlin-logging:2.0.3")
-    val spekVersion = "2.0.14"
+    implementation("io.github.microutils:kotlin-logging:2.0.10")
+    val spekVersion = "2.0.15"
     /** Logging -------------------------------------------------------- */
     testImplementation("org.slf4j:slf4j-simple:1.7.30")
     testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.13.0")

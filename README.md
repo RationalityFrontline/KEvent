@@ -1,5 +1,7 @@
 # KEvent  
-[![Kotlin 1.4.20](https://img.shields.io/badge/Kotlin-1.4.20-blue.svg)](http://kotlinlang.org) [![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22) [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
+[![Kotlin 1.5.21](https://img.shields.io/badge/Kotlin-1.5.21-blue.svg)](http://kotlinlang.org)
+[![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
+[![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 
 A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
@@ -32,7 +34,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 ## Download
 **Gradle Kotlin DSL**
 ```kotlin
-implementation("org.rationalityfrontline:kevent:2.0.0")
+implementation("org.rationalityfrontline:kevent:2.0.1")
 ```
 
 **Maven**
@@ -40,7 +42,7 @@ implementation("org.rationalityfrontline:kevent:2.0.0")
 <dependency>
     <groupId>org.rationalityfrontline</groupId>
     <artifactId>kevent</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 </dependency>
 ```
 
