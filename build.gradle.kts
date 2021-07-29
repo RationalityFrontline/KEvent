@@ -17,7 +17,6 @@ val GITHUB_REPO = "RationalityFrontline/kevent"
 
 repositories {
     mavenCentral()
-//    jcenter()
 }
 
 dependencies {
