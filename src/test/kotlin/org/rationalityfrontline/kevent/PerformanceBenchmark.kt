@@ -121,7 +121,6 @@ object PerformanceBenchmark {
             results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.SEQUENTIAL, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         }
         results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.CONCURRENT, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
-        results.add(measureEventDispatchTime(eventNum, subscriberNum, EventDispatchMode.ORDERED_CONCURRENT, SubscriberThreadMode.BACKGROUND, isTimeConsuming, enableLog = enableLog))
         if (csvEnabled) {
             val conditions = "event-$eventNum; subs-$subscriberNum; tc-$isTimeConsuming; st-false"
             val row = mutableListOf<String>()

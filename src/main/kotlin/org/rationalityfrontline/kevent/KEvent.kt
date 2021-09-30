@@ -15,7 +15,7 @@
  *
  */
 
-@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
+@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE", "MemberVisibilityCanBePrivate")
 
 package org.rationalityfrontline.kevent
 
@@ -109,18 +109,6 @@ enum class EventDispatchMode {
      * * Subscribers are time consuming and can be called concurrently.
      */
     CONCURRENT,
-
-    /**
-     * Subscribers will receive the event concurrently, the receive order is determined by their priority.
-     * In order to ensure the receive order, there will be a 1 millisecond delay between each dispatch
-     * action. If the receive order doesn't matter, please use [CONCURRENT].
-     *
-     *  Only compatible with [SubscriberThreadMode.BACKGROUND].
-     *
-     * Usage scenarios:
-     * * Subscribers are time consuming and can be called concurrently, but their launch order matters (for example, when event cancellation is need).
-     */
-    ORDERED_CONCURRENT,
 }
 
 /**
@@ -141,7 +129,7 @@ enum class SubscriberThreadMode {
     /**
      * Subscriber will be called on background worker thread, see [Dispatchers.Default].
      *
-     * Compatible with [EventDispatchMode.CONCURRENT] and [EventDispatchMode.ORDERED_CONCURRENT].
+     * Only compatible with [EventDispatchMode.CONCURRENT].
      *
      * Usage scenarios:
      * * Single time consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
@@ -193,7 +181,7 @@ class KEvent(
             eventChannel.consumeAsFlow().collect { event ->
                 val subscriberList = subscribersReadOnlyMap[event.type]
                 if (subscriberList == null || subscriberList.isEmpty()) {
-                    logger.warn { "No subscribers for event type \"${event.type.name}\"" }
+                    if (!event.isSticky) logger.warn { "No subscribers for event type \"${event.type.name}\"" }
                 } else {
                     val e = if (event.isSticky) event.copy(isSticky = false) else event
 
@@ -214,15 +202,6 @@ class KEvent(
                             scope.launch {
                                 subscriberList.forEach { subscriber ->
                                     if (!dispatchEventSync(e, subscriber)) return@forEach
-                                }
-                                removeCancelledEvent()
-                            }
-                        }
-                        EventDispatchMode.ORDERED_CONCURRENT -> {
-                            scope.launch {
-                                subscriberList.forEach { subscriber ->
-                                    if (!dispatchEventAsync(e, subscriber)) return@forEach
-                                    delay(1)
                                 }
                                 removeCancelledEvent()
                             }
@@ -339,8 +318,7 @@ class KEvent(
     ): Boolean = post(Event(type, data, dispatchMode, isSticky))
 
     /**
-     * Cancel further event dispatching, this function works with [EventDispatchMode.SEQUENTIAL] and [EventDispatchMode.POSTING],
-     * and works with [EventDispatchMode.ORDERED_CONCURRENT] with additional requirements (cancellation need to be called instantly on subscriber invocation), but won't work with [EventDispatchMode.CONCURRENT]
+     * Cancel further event dispatching, this function only works with [EventDispatchMode.SEQUENTIAL] and [EventDispatchMode.POSTING].
      *
      * @return true if the event get cancelled, false if the event is already cancelled before.
      */

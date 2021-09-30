@@ -15,7 +15,7 @@
  *
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_INLINE", "unused", "PropertyName")
 
 package org.rationalityfrontline.kevent
 

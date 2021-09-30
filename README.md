@@ -1,5 +1,5 @@
 # KEvent  
-[![Kotlin 1.5.21](https://img.shields.io/badge/Kotlin-1.5.21-blue.svg)](http://kotlinlang.org)
+[![Kotlin 1.5.31](https://img.shields.io/badge/Kotlin-1.5.31-blue.svg)](http://kotlinlang.org)
 [![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
 [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 
@@ -7,17 +7,16 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
 ## Feature List
 * Implement publish–subscribe pattern
-* Tiny (60.1kb jar) and super fast (no reflection)
+* Tiny (52.58kb jar) and super-fast (no reflection)
 * Usable in plenty scenarios: plain kotlin, server side, android, javafx, swing
 * Use Enum as event type, so you don't have to create numerous event classes
-* Support 4 event dispatch modes with 3 subscriber thread modes
+* Support 3 event dispatch modes with 3 subscriber thread modes
 
   | DispatchMode\\ThreadMode | POSTING | BACKGROUND | UI |
   |--------------------------|:-------:|:----------:|:----:|
   | POSTING                  | √       | ×          | ×  |
   | SEQUENTIAL               | ×       | √          | √  |
   | CONCURRENT               | ×       | √          | ×  |
-  | ORDERED\_CONCURRENT      | ×       | √          | ×  |
 * Support a bunch of advanced features:
   * event blocking
   * event dispatch cancellation
@@ -34,7 +33,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 ## Download
 **Gradle Kotlin DSL**
 ```kotlin
-implementation("org.rationalityfrontline:kevent:2.0.1")
+implementation("org.rationalityfrontline:kevent:2.1.0")
 ```
 
 **Maven**
@@ -42,7 +41,7 @@ implementation("org.rationalityfrontline:kevent:2.0.1")
 <dependency>
     <groupId>org.rationalityfrontline</groupId>
     <artifactId>kevent</artifactId>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 

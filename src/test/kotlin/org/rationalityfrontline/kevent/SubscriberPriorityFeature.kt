@@ -51,16 +51,6 @@ object SubscriberPriorityFeature : Spek({
                 assertTrue { subscriberAssertionFailed.get() }
             }
 
-            When("an event is posted in dispatch mode ORDERED_CONCURRENT") {
-                resetCounters()
-                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
-                waitForEventDispatch(range.count(), counter)
-            }
-
-            Then("subscribers are be called ordered") {
-                assertFalse { subscriberAssertionFailed.get() }
-            }
-
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 resetCounters()
                 KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)

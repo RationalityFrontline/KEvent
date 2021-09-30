@@ -62,42 +62,6 @@ object EventCancellingFeature : Spek({
                 sleep(30)
                 assertNotEquals(50, counter.get())
             }
-
-            And("it works with event dispatch mode ORDERED_CONCURRENT when cancellation is called instantly on subscriber invocation") {
-                counter.set(0)
-                KEVENT.clear()
-                for (i in 1..100) {
-                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) { event ->
-                        if (i == 51) {
-                            KEVENT.cancelEvent(event)
-                        }
-                        sleep(10)
-                        counter.getAndIncrement()
-                    }
-                }
-                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
-                assertFailsWith(TimeoutException::class) {
-                    waitForEventDispatch(100, counter, timeouts = 1500)
-                }
-                assertEquals(50, counter.get())
-            }
-
-            And("it doesn't work with event dispatch mode ORDERED_CONCURRENT when cancellation is not called instantly on subscriber invocation") {
-                counter.set(0)
-                KEVENT.clear()
-                for (i in 1..100) {
-                    KEVENT.subscribe<Unit>(TestEventType.A, SubscriberThreadMode.BACKGROUND, priority = i) { event ->
-                        sleep(10)
-                        if (i == 51) {
-                            KEVENT.cancelEvent(event)
-                        }
-                        counter.getAndIncrement()
-                    }
-                }
-                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
-                sleep(1500)
-                assertNotEquals(50, counter.get())
-            }
         }
     }
 })

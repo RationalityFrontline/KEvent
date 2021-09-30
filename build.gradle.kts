@@ -1,16 +1,16 @@
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 
 plugins {
-	kotlin("jvm") version "1.5.21"
+	kotlin("jvm") version "1.5.31"
     `java-library`
     `maven-publish`
     signing
-    id("org.jetbrains.dokka") version "1.5.0"
-    id("org.javamodularity.moduleplugin") version "1.8.7"
+    id("org.jetbrains.dokka") version "1.5.30"
+    id("org.javamodularity.moduleplugin") version "1.8.8"
 }
 
 group = "org.rationalityfrontline"
-version = "2.0.1"
+version = "2.1.0"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
@@ -20,15 +20,15 @@ repositories {
 }
 
 dependencies {
-    val coroutinesVersion = "1.5.1"
+    val coroutinesVersion = "1.5.2"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
-    implementation("io.github.microutils:kotlin-logging:2.0.10")
-    val spekVersion = "2.0.15"
+    implementation("io.github.microutils:kotlin-logging:2.0.11")
+    val spekVersion = "2.0.17"
     /** Logging -------------------------------------------------------- */
-    testImplementation("org.slf4j:slf4j-simple:1.7.30")
-    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.13.0")
+    testImplementation("org.slf4j:slf4j-simple:1.7.32")
+    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.1.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test:${getKotlinPluginVersion()}")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
@@ -72,6 +72,13 @@ tasks {
     register<Jar>("sourcesJar") {
         archiveClassifier.set("sources")
         from(sourceSets["main"].allSource)
+    }
+    jar {
+        manifest.attributes(mapOf(
+            "Implementation-Title" to NAME,
+            "Implementation-Version" to project.version,
+            "Implementation-Vendor" to "RationalityFrontline"
+        ))
     }
 }
 

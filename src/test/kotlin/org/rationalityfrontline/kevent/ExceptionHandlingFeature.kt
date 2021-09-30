@@ -53,13 +53,6 @@ object ExceptionHandlingFeature : Spek({
                 assertSubscribersCalledCorrectly()
             }
 
-            And("it's all the same when the event is posted in dispatch mode ORDERED_CONCURRENT") {
-                resetCounters()
-                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
-                waitForEventDispatch(10, counter)
-                assertSubscribersCalledCorrectly()
-            }
-
             And("it's all the same when the event is posted in dispatch mode SEQUENTIAL") {
                 resetCounters()
                 KEVENT.post(TestEventType.A, Unit, EventDispatchMode.SEQUENTIAL)

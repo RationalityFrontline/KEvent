@@ -136,20 +136,5 @@ object ThreadingFeature : Spek({
                 assertFalse { calledThreadModesMap[SubscriberThreadMode.UI]!! }
             }
         }
-
-        Scenario("ORDERED_CONCURRENT: only compatible with BACKGROUND") {
-            When("an event is posted") {
-                KEVENT.post(TestEventType.A, Unit, EventDispatchMode.ORDERED_CONCURRENT)
-            }
-
-            Then("only subscribers whose thread mode is BACKGROUND will be notified") {
-                assertFailsWith(TimeoutException::class) {
-                    waitForEventDispatch(3, counter, 30)
-                }
-                assertFalse { calledThreadModesMap[SubscriberThreadMode.POSTING]!! }
-                assertTrue { calledThreadModesMap[SubscriberThreadMode.BACKGROUND]!! }
-                assertFalse { calledThreadModesMap[SubscriberThreadMode.UI]!! }
-            }
-        }
     }
 })
