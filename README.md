@@ -9,7 +9,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
 ## Feature List
 * Implement publish–subscribe pattern
-* Tiny (52.58kb jar) and super-fast (no reflection)
+* Tiny (52.8kb jar) and super-fast (no reflection)
 * Usable in plenty scenarios: plain kotlin, server side, android, javafx, swing
 * Use Enum as event type, so you don't have to create numerous event classes
 * Support 3 event dispatch modes with 3 subscriber thread modes
