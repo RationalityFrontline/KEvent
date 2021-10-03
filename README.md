@@ -1,7 +1,9 @@
-# KEvent  
-[![Kotlin 1.5.31](https://img.shields.io/badge/Kotlin-1.5.31-blue.svg)](http://kotlinlang.org)
-[![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
-[![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE) [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
+# KEvent
+[![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=maven%20central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
+[![Kotlin 1.5.31](https://img.shields.io/badge/kotlin-1.5.31-blue.svg)](http://kotlinlang.org)
+![JDK](https://img.shields.io/badge/jdk-%3E%3D11-orange)
+[![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE)
+[![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
 
 A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
@@ -134,18 +136,18 @@ For advanced features, please refer to the corresponding test specifications:
 There is a [sample benchmark code](https://github.com/RationalityFrontline/kevent/blob/master/src/test/kotlin/org/rationalityfrontline/kevent/PerformanceBenchmark.kt) in the repository, 
 you can clone this repository and run the benchmark on your own machine. Here is the benchmark results on my machine:
 
-| Conditions\\AvgCallTime(ms)\\ThreadMode     | POSTING  | SEQUENTIAL  | CONCURRENT   | ORDERED\_CONCURRENT |
-|------------------------------------------------|------------|-------------|--------------|---------------------|
-| event\-1;subs\-10000;tc\-false;st\-false    | 4\.28E\-05 | 0\.00136298 | 0\.014001329 | 2\.0647497          |
-| event\-1;subs\-10000;tc\-true;st\-false     | 10\.513036 | 10\.69949   | 2\.6430638   | 2\.8060534          |
-| event\-10000;subs\-1;tc\-false;st\-false    | 6\.81E\-04 | 0\.03349961 | 0\.01899664  | 0\.025285339        |
-| event\-10000;subs\-1;tc\-true;st\-false     | 10\.477978 | 2\.6560345  | 2\.6473286   | 2\.7563891          |
-| event\-1000;subs\-10000;tc\-false;st\-false | 4\.62E\-05 | 4\.32E\-04  | 0\.014056747 | 0\.00546798         |
-| event\-1;subs\-10000;tc\-false;st\-true     |            |             | 0\.01410701  |                     |
-| event\-1;subs\-10000;tc\-true;st\-true      |            |             | 2\.6499982   |                     |
-| event\-10000;subs\-1;tc\-false;st\-true     |            |             | 0\.02116017  |                     |
-| event\-10000;subs\-1;tc\-true;st\-true      |            |             | 2\.65346     |                     |
-| event\-1000;subs\-10000;tc\-false;st\-true  |            |             | 0\.01399993  |                     |
+| Conditions\\AvgCallTime(ms)\\ThreadMode    | POSTING      | SEQUENTIAL  | CONCURRENT   |
+|--------------------------------------------|--------------|-------------|--------------|
+| event-1; subs-10000; tc-false; st-false    | 4.6920002E-5 | 0.00142243  | 8.7184E-4    |
+| event-1; subs-10000; tc-true; st-false     | 10.446612    | 10.578969   | 1.3352561    |
+| event-10000; subs-1; tc-false; st-false    | 0.00128533   | 0.00481413  | 0.0026817601 |
+| event-10000; subs-1; tc-true; st-false     | 10.942825    | 1.3770571   | 1.3426003    |
+| event-1000; subs-10000; tc-false; st-false | 2.238846E-5  | 3.071547E-4 | 6.2108616E-4 |
+| event-1; subs-10000; tc-false; st-true     |              |             | 6.9659E-4    |
+| event-1; subs-10000; tc-true; st-true      |              |             | 1.3062543    |
+| event-10000; subs-1; tc-false; st-true     |              |             | 0.0034271    |
+| event-10000; subs-1; tc-true; st-true      |              |             | 1.3126742    |
+| event-1000; subs-10000; tc-false; st-true  |              |             | 6.246506E-4  |
 
 *event = event num<br>
 subs = subscriber num<br>
@@ -154,10 +156,10 @@ st = if the event is sticky (and subscribers are added after the event was poste
 
 ```text
 [Machine Info]
-CPU: Intel(R) Core(TM) i5-6500 @ 3.20GHz (4C4T)
-Memory: 8 + 4 = 12GB, DDR4 SDRAM, 2133MHz
+CPU: Intel(R) Core(TM) i7-4710MQ @ 2.50GHz (4C8T)
+Memory: 8 + 8 = 16GB, DDR3, 1600MHz
 OS: Window 10 Enterprise 64 bit version 1909
-JDK: OpenJDK 14.0.1+7 64 bit
+JDK: OpenJDK 17+35-2724 64 bit
 ```
 
 ## License

@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	kotlin("jvm") version "1.5.31"
@@ -40,6 +41,12 @@ sourceSets.main {
 }
 
 tasks {
+    withType(JavaCompile::class.java) {
+        options.release.set(11)
+    }
+    withType(KotlinCompile::class.java) {
+        kotlinOptions.jvmTarget = "11"
+    }
     dokkaHtml {
         outputDirectory.set(buildDir.resolve("javadoc"))
         moduleName.set("KEvent")
@@ -52,9 +59,7 @@ tasks {
     test {
         testLogging.showStandardStreams = true
         useJUnitPlatform {
-            doFirst {
-                classpath.forEach { it.mkdirs() }
-            }
+            doFirst { classpath.forEach { it.mkdirs() } }
             jvmArgs = listOf(
                 "--add-exports", "org.junit.platform.commons/org.junit.platform.commons.util=ALL-UNNAMED",
                 "--add-exports", "org.junit.platform.commons/org.junit.platform.commons.logging=ALL-UNNAMED",

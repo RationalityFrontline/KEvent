@@ -24,7 +24,7 @@ object PerformanceBenchmark {
         val headerRow = mutableListOf<String>()
         arrayOf("AvgSubsTime", "AvgPostTime", "AvgWaitTime", "AvgCallTime").forEach {
             headerRow.add(it)
-            headerRow.addAll(arrayOf("POSTING", "SEQUENTIAL", "CONCURRENT", "ORDERED_CONCURRENT", ""))
+            headerRow.addAll(arrayOf("POSTING", "SEQUENTIAL", "CONCURRENT", ""))
         }
         csvRows.add(headerRow)
         csvEnabled = true
@@ -142,12 +142,11 @@ object PerformanceBenchmark {
             val conditions = "event-$eventNum; subs-$subscriberNum; tc-$isTimeConsuming; st-true"
             val row = mutableListOf<String>()
             for (i in 0..3) {
-                row.addAll(arrayOf(conditions, "", "", results[i].toString(), "", ""))
+                row.addAll(arrayOf(conditions, "", "", results[i].toString(), ""))
             }
             csvRows.add(row)
         }
     }
-
 
     fun testSingleEventWithMassiveSubscribers(num: Int) {
         testWithAllDispatchModes(1, num, false)
