@@ -11,12 +11,10 @@ private class ExampleSubscriber : KEventSubscriber {
             println("${"ExampleSubscriber.lambda".padEnd(35)}: $event")
         }
         subscribe(EventTypes.STRING_EVENT, ::onStringEvent)
-        subscribeMultiple(
-            listOf(
-                EventTypes.UNIT_EVENT,
-                EventTypes.STRING_EVENT,
-            ), ::onAnyEvent
-        )
+        subscribeMultiple(listOf(
+            EventTypes.UNIT_EVENT,
+            EventTypes.STRING_EVENT,
+        ), ::onAnyEvent)
     }
 
     fun unregisterSubscribers() {

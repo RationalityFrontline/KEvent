@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 RationalityFrontline
+ * Copyright 2020-2022 RationalityFrontline
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ package org.rationalityfrontline.kevent
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import mu.KotlinLogging
 import java.util.*
@@ -64,7 +63,7 @@ typealias EventConsumer<T> = (Event<T>) -> Unit
  * @param consumer event consumer function.
  * @param threadMode specifies on which thread the subscriber will be called, see [SubscriberThreadMode].
  * @param priority subscriber priority, bigger is higher, default to 0.
- * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
+ * @param tag optional tag that is useful for unsubscribe, see [KEvent.removeSubscribersByTag].
  */
 data class Subscriber<T : Any>(
     val eventTypes: Set<Enum<*>>,
@@ -85,8 +84,8 @@ enum class EventDispatchMode {
      * Only compatible with [SubscriberThreadMode.POSTING].
      *
      * Usage scenarios:
-     * * All subscribers of the event type are not time consuming.
-     * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
+     * * All subscribers of the event type are not time-consuming.
+     * * Subscribers are time-consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
      */
     POSTING,
 
@@ -106,7 +105,7 @@ enum class EventDispatchMode {
      * Only compatible with [SubscriberThreadMode.BACKGROUND].
      *
      * Usage scenarios:
-     * * Subscribers are time consuming and can be called concurrently.
+     * * Subscribers are time-consuming and can be called concurrently.
      */
     CONCURRENT,
 }
@@ -121,8 +120,8 @@ enum class SubscriberThreadMode {
      * Only compatible with [EventDispatchMode.POSTING].
      *
      * Usage scenarios:
-     * * All subscribers of the event type are not time consuming.
-     * * Subscribers are time consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
+     * * All subscribers of the event type are not time-consuming.
+     * * Subscribers are time-consuming but there is no need to call subscribers concurrently and it's ok to block the event posting thread.
      */
     POSTING,
 
@@ -132,8 +131,8 @@ enum class SubscriberThreadMode {
      * Only compatible with [EventDispatchMode.CONCURRENT].
      *
      * Usage scenarios:
-     * * Single time consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
-     * * Multiple time consuming subscribers and it's ok to run these subscribers concurrently.
+     * * Single time-consuming subscriber and the event posting thread must not be blocked (for example, UI thread).
+     * * Multiple time-consuming subscribers and it's ok to run these subscribers concurrently.
      */
     BACKGROUND,
 
@@ -144,7 +143,7 @@ enum class SubscriberThreadMode {
      *
      * Usage scenarios:
      * * The subscriber update UI components and thus must be called in the UI thread
-     * (this also means the subscriber must not be time consuming).
+     * (this also means the subscriber must not be time-consuming).
      * If events are always posted from UI thread, please use [POSTING] for better performance.
      */
     UI,
@@ -181,7 +180,7 @@ class KEvent(
             eventChannel.consumeAsFlow().collect { event ->
                 val subscriberList = subscribersReadOnlyMap[event.type]
                 if (subscriberList == null || subscriberList.isEmpty()) {
-                    if (!event.isSticky) logger.warn { "No subscribers for event type \"${event.type.name}\"" }
+                    if (!event.isSticky) logger.trace { "No subscriber for event type \"${event.type.name}\"" }
                 } else {
                     val e = if (event.isSticky) event.copy(isSticky = false) else event
 
@@ -281,7 +280,7 @@ class KEvent(
                 filter { it.threadMode == SubscriberThreadMode.POSTING }
             }
             if (subscriberList == null || subscriberList.isEmpty()) {
-                logger.warn { "No subscribers for event type \"${event.type.name}\" with dispatch mode ${EventDispatchMode.POSTING}" }
+                logger.trace { "No subscriber for event type \"${event.type.name}\" with dispatch mode ${EventDispatchMode.POSTING}" }
                 return false
             } else {
                 subscriberList.forEach { subscriber ->
@@ -393,7 +392,7 @@ class KEvent(
      * @param consumer event consumer function.
      * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
-     * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
+     * @param tag optional tag that is useful for unsubscribe, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribe(
@@ -411,7 +410,7 @@ class KEvent(
      * @param consumer event consumer function.
      * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
-     * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
+     * @param tag optional tag that is useful for unsubscribe, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribe(
@@ -440,7 +439,7 @@ class KEvent(
      * @param consumer event consumer function.
      * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
-     * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
+     * @param tag optional tag that is useful for unsubscribe, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribeMultiple(
@@ -459,7 +458,7 @@ class KEvent(
      * @param consumer event consumer function.
      * @param threadMode thread mode, see [SubscriberThreadMode].
      * @param priority priority, bigger is higher.
-     * @param tag optional tag that is useful for unsubscription, see [KEvent.removeSubscribersByTag].
+     * @param tag optional tag that is useful for unsubscribe, see [KEvent.removeSubscribersByTag].
      * @return true if subscription is successful, else false.
      */
     fun <T : Any> subscribeMultiple(
@@ -489,7 +488,7 @@ class KEvent(
     /**
      * Unsubscribe the subscriber with [eventType] and [consumer].
      *
-     * @return true if subscriber exists and unsubscription is successful, else false.
+     * @return true if subscriber exists and unsubscribe is successful, else false.
      */
     fun <T : Any> unsubscribe(eventType: Enum<*>, consumer: EventConsumer<T>): Boolean {
         subscribersMap[eventType]?.run {
@@ -506,7 +505,7 @@ class KEvent(
     /**
      * Unsubscribe the subscriber with [eventTypes] and [consumer].
      *
-     * @return true if subscriber exists and any of the unsubscription is successful, else false.
+     * @return true if subscriber exists and all unsubscribe are successful, else false.
      */
     fun <T : Any> unsubscribeMultiple(eventTypes: Collection<Enum<*>>, consumer: EventConsumer<T>): Boolean {
         var removed = false
@@ -624,7 +623,7 @@ class KEvent(
     }
 
     /**
-     * Clear all states of the [KEvent] object. All subscribers, sticky events, event blocking, etc will be removed.
+     * Clear all states of the [KEvent] object. All subscribers, sticky events, event blocking, etc. will be removed.
      */
     fun clear() {
         removeAllSubscribers()

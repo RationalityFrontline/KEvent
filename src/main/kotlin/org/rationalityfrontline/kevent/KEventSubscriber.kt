@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 RationalityFrontline
+ * Copyright 2020-2022 RationalityFrontline
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ inline fun <T : Any> KEventSubscriber.subscribeMultiple(
 /**
  * Unsubscribe the subscriber with [eventType] and [consumer].
  *
- * @return true if subscriber exists and unsubscription is successful, else false.
+ * @return true if subscriber exists and unsubscribe is successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.unsubscribe(
     eventType: Enum<*>,
@@ -107,7 +107,7 @@ inline fun <T : Any> KEventSubscriber.unsubscribe(
 /**
  * Unsubscribe the subscriber with [eventTypes] and [consumer].
  *
- * @return true if subscriber exists and any of the unsubscription is successful, else false.
+ * @return true if subscriber exists and all unsubscribe are successful, else false.
  */
 inline fun <T : Any> KEventSubscriber.unsubscribeMultiple(
     eventTypes: Collection<Enum<*>>,
@@ -117,7 +117,7 @@ inline fun <T : Any> KEventSubscriber.unsubscribeMultiple(
 /**
  * Unsubscribe all subscribers with tag of [KEventSubscriber.SUBSCRIBER_TAG].
  *
- * @return true if subscriber exists and any of the unsubscription is successful, else false.
+ * @return true if any subscriber gets removed, else false.
  */
 inline fun KEventSubscriber.unsubscribeAll(): Boolean = KEVENT_INSTANCE.removeSubscribersByTag(SUBSCRIBER_TAG)
 

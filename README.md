@@ -1,6 +1,6 @@
 # KEvent
 [![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=maven%20central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
-[![Kotlin 1.5.31](https://img.shields.io/badge/kotlin-1.5.31-blue.svg)](http://kotlinlang.org)
+[![Kotlin 1.6.20](https://img.shields.io/badge/kotlin-1.6.20-blue.svg)](http://kotlinlang.org)
 ![JDK](https://img.shields.io/badge/jdk-%3E%3D11-orange)
 [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE)
 [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
@@ -9,7 +9,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 
 ## Feature List
 * Implement publish–subscribe pattern
-* Tiny (52.8kb jar) and super-fast (no reflection)
+* Tiny (52.2kb jar) and super-fast (no reflection)
 * Usable in plenty scenarios: plain kotlin, server side, android, javafx, swing
 * Use Enum as event type, so you don't have to create numerous event classes
 * Support 3 event dispatch modes with 3 subscriber thread modes
@@ -35,7 +35,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 ## Download
 **Gradle Kotlin DSL**
 ```kotlin
-implementation("org.rationalityfrontline:kevent:2.1.0")
+implementation("org.rationalityfrontline:kevent:2.1.1")
 ```
 
 **Maven**
@@ -43,7 +43,7 @@ implementation("org.rationalityfrontline:kevent:2.1.0")
 <dependency>
     <groupId>org.rationalityfrontline</groupId>
     <artifactId>kevent</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.1</version>
 </dependency>
 ```
 
@@ -60,12 +60,10 @@ private class ExampleSubscriber : KEventSubscriber {
             println("${"ExampleSubscriber.lambda".padEnd(35)}: $event")
         }
         subscribe(EventTypes.STRING_EVENT, ::onStringEvent)
-        subscribeMultiple(
-            listOf(
-                EventTypes.UNIT_EVENT,
-                EventTypes.STRING_EVENT,
-            ), ::onAnyEvent
-        )
+        subscribeMultiple(listOf(
+            EventTypes.UNIT_EVENT,
+            EventTypes.STRING_EVENT,
+        ), ::onAnyEvent)
     }
 
     fun unregisterSubscribers() {
@@ -167,7 +165,7 @@ JDK: OpenJDK 17+35-2724 64 bit
 KEvent is released under the [Apache 2.0 license](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE).
 
 ```text
-Copyright 2020-2021 RationalityFrontline
+Copyright 2020-2022 RationalityFrontline
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

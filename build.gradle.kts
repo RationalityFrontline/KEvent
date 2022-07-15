@@ -1,17 +1,16 @@
-import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	kotlin("jvm") version "1.5.31"
+	kotlin("jvm") version "1.6.20"
     `java-library`
     `maven-publish`
     signing
-    id("org.jetbrains.dokka") version "1.5.30"
-    id("org.javamodularity.moduleplugin") version "1.8.8"
+    id("org.jetbrains.dokka") version "1.6.20"
+    id("org.javamodularity.moduleplugin") version "1.8.11"
 }
 
 group = "org.rationalityfrontline"
-version = "2.1.0"
+version = "2.1.1"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
@@ -21,18 +20,19 @@ repositories {
 }
 
 dependencies {
-    val coroutinesVersion = "1.5.2"
+    val coroutinesVersion = "1.6.2"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
-    implementation("io.github.microutils:kotlin-logging:2.0.11")
-    val spekVersion = "2.0.17"
-    /** Logging -------------------------------------------------------- */
-    testImplementation("org.slf4j:slf4j-simple:1.7.32")
-    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.1.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:${getKotlinPluginVersion()}")
+    implementation("io.github.microutils:kotlin-logging:2.1.23")
+    /** Testing -------------------------------------------------------- */
+    val spekVersion = "2.0.18"
+    testImplementation("org.slf4j:slf4j-simple:1.7.36")
+    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.3.0")
+    testImplementation(kotlin("test"))
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
+    testRuntimeOnly(kotlin("reflect"))
     testRuntimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-swing:$coroutinesVersion")
 }
 
@@ -101,7 +101,7 @@ publishing {
                 licenses {
                     license {
                         name.set("The Apache Software License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                     }
                 }
                 developers {

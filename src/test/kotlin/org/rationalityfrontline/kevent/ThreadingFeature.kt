@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 
 
 object ThreadingFeature : Spek({
-    Feature("KEvent supports four event dispatch modes (POSTING, SEQUENTIAL, CONCURRENT, ORDERED_CONCURRENT) and three subscriber thread modes (POSTING, BACKGROUND, UI)") {
+    Feature("KEvent support three event dispatch modes (POSTING, SEQUENTIAL, CONCURRENT) with three subscriber thread modes (POSTING, BACKGROUND, UI)") {
 
         val counter by memoized { AtomicInteger(0) }
         val calledThreadModesMap by memoized {
