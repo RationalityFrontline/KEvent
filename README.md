@@ -35,7 +35,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 ## Download
 **Gradle Kotlin DSL**
 ```kotlin
-implementation("org.rationalityfrontline:kevent:2.1.1")
+implementation("org.rationalityfrontline:kevent:2.1.2")
 ```
 
 **Maven**
@@ -43,7 +43,7 @@ implementation("org.rationalityfrontline:kevent:2.1.1")
 <dependency>
     <groupId>org.rationalityfrontline</groupId>
     <artifactId>kevent</artifactId>
-    <version>2.1.1</version>
+    <version>2.1.2</version>
 </dependency>
 ```
 

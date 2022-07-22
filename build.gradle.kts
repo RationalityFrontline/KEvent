@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.rationalityfrontline"
-version = "2.1.1"
+version = "2.1.2"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"

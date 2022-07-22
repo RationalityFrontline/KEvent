@@ -50,7 +50,6 @@ data class Event<T : Any>(
     fun isPostedSticky(kEvent: KEvent = KEVENT) : Boolean = kEvent.containsStickyEvent(this as Event<Any>)
 }
 
-
 /**
  * Consumer function of the event.
  */
@@ -238,7 +237,7 @@ class KEvent(
     private inline fun consumeEvent(subscriber: Subscriber<Any>, event: Event<Any>) {
         try {
             subscriber.consumer(event)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             logger.error { "Exception happened when calling subscriber of event \"$event\"\n${e.stackTraceToString()}" }
         }
     }
