@@ -3,7 +3,7 @@ module kevent {
     requires kotlin.stdlib;
     requires kotlinx.coroutines.core.jvm;
     //logging
-    requires kotlin.logging.jvm;
+    requires io.github.microutils.kotlinlogging;
 
     exports org.rationalityfrontline.kevent;
 }
