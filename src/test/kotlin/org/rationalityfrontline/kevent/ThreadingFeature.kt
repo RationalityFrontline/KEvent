@@ -45,7 +45,7 @@ object ThreadingFeature : Spek({
             runBlocking(Dispatchers.Main) {
                 jlabel.text = "0"
             }
-            SubscriberThreadMode.values().forEach { threadMode ->
+            SubscriberThreadMode.entries.forEach { threadMode ->
                 KEVENT.subscribe<Unit>(TestEventType.A, threadMode) { event ->
                     when (threadMode) {
                         SubscriberThreadMode.UI -> {
@@ -90,7 +90,10 @@ object ThreadingFeature : Spek({
             addAllKindsOfSubscribers()
         }
         afterFeature {
-            jframe.dispatchEvent(WindowEvent(jframe, WindowEvent.WINDOW_CLOSING))
+            GlobalScope.launch {
+                delay(10)
+                jframe.dispatchEvent(WindowEvent(jframe, WindowEvent.WINDOW_CLOSING))
+            }
             KEVENT.clear()
         }
 

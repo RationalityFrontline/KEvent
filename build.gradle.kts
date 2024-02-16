@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "org.rationalityfrontline"
-version = "2.3.0"
+version = "2.3.1"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    val coroutinesVersion = "1.7.3"
+    val coroutinesVersion = "1.8.0"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
@@ -32,6 +32,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-commons:1.10.2")
     testRuntimeOnly(kotlin("reflect"))
     testRuntimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-swing:$coroutinesVersion")
 }
@@ -48,7 +49,7 @@ tasks {
         kotlinOptions.jvmTarget = "11"
     }
     dokkaHtml {
-        outputDirectory.set(buildDir.resolve("javadoc"))
+        outputDirectory.set(layout.buildDirectory.dir("javadoc"))
         moduleName.set("KEvent")
         dokkaSourceSets {
             named("main") {
