@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 RationalityFrontline
+ * Copyright 2020-2024 RationalityFrontline
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package org.rationalityfrontline.kevent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.consumeAsFlow
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
@@ -178,7 +178,7 @@ class KEvent(
         scope.launch {
             eventChannel.consumeAsFlow().collect { event ->
                 val subscriberList = subscribersReadOnlyMap[event.type]
-                if (subscriberList == null || subscriberList.isEmpty()) {
+                if (subscriberList.isNullOrEmpty()) {
                     if (!event.isSticky) logger.trace { "No subscriber for event type \"${event.type.name}\"" }
                 } else {
                     val e = if (event.isSticky) event.copy(isSticky = false) else event
@@ -278,7 +278,7 @@ class KEvent(
             val subscriberList = subscribersReadOnlyMap[event.type]?.run {
                 filter { it.threadMode == SubscriberThreadMode.POSTING }
             }
-            if (subscriberList == null || subscriberList.isEmpty()) {
+            if (subscriberList.isNullOrEmpty()) {
                 logger.trace { "No subscriber for event type \"${event.type.name}\" with dispatch mode ${EventDispatchMode.POSTING}" }
                 return false
             } else {

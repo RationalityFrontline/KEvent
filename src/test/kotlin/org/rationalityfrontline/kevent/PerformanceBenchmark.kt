@@ -1,7 +1,7 @@
 package org.rationalityfrontline.kevent
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

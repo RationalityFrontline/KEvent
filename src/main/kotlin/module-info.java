@@ -1,9 +1,9 @@
 module kevent {
     //kotlin
     requires kotlin.stdlib;
-    requires kotlinx.coroutines.core.jvm;
+    requires kotlinx.coroutines.core;
     //logging
-    requires io.github.microutils.kotlinlogging;
+    requires io.github.oshai.kotlinlogging;
 
     exports org.rationalityfrontline.kevent;
 }

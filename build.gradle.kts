@@ -1,16 +1,16 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	kotlin("jvm") version "1.7.21"
+	kotlin("jvm") version "1.9.22"
     `java-library`
     `maven-publish`
     signing
-    id("org.jetbrains.dokka") version "1.7.20"
+    id("org.jetbrains.dokka") version "1.9.10"
     id("org.javamodularity.moduleplugin") version "1.8.12"
 }
 
 group = "org.rationalityfrontline"
-version = "2.2.0"
+version = "2.3.0"
 val NAME = "kevent"
 val DESC = "A powerful in-process event dispatcher based on Kotlin and Coroutines"
 val GITHUB_REPO = "RationalityFrontline/kevent"
@@ -20,15 +20,15 @@ repositories {
 }
 
 dependencies {
-    val coroutinesVersion = "1.6.4"
+    val coroutinesVersion = "1.7.3"
     /** Kotlin --------------------------------------------------------- */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
     /** Logging -------------------------------------------------------- */
-    implementation("io.github.microutils:kotlin-logging:3.0.4")
+    implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
     /** Testing -------------------------------------------------------- */
     val spekVersion = "2.0.19"
     testImplementation("org.slf4j:slf4j-simple:2.0.4")
-    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.6.0")
+    testImplementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.3")
     testImplementation(kotlin("test"))
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion")

@@ -1,6 +1,6 @@
 # KEvent
 [![Maven Central](https://img.shields.io/maven-central/v/org.rationalityfrontline/kevent.svg?label=maven%20central)](https://search.maven.org/search?q=g:%22org.rationalityfrontline%22%20AND%20a:%22kevent%22)
-[![Kotlin 1.7.21](https://img.shields.io/badge/kotlin-1.7.21-blue.svg)](http://kotlinlang.org)
+[![Kotlin 1.9.22](https://img.shields.io/badge/kotlin-1.9.22-blue.svg)](http://kotlinlang.org)
 ![JDK](https://img.shields.io/badge/jdk-%3E%3D11-orange)
 [![Apache License 2.0](https://img.shields.io/github/license/rationalityfrontline/kevent)](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE)
 [![Awesome Kotlin Badge](https://kotlin.link/awesome-kotlin.svg)](https://github.com/KotlinBy/awesome-kotlin)
@@ -35,7 +35,7 @@ A powerful in-process event dispatcher based on Kotlin and Coroutines.
 ## Download
 **Gradle Kotlin DSL**
 ```kotlin
-implementation("org.rationalityfrontline:kevent:2.2.0")
+implementation("org.rationalityfrontline:kevent:2.3.0")
 ```
 
 **Maven**
@@ -43,7 +43,7 @@ implementation("org.rationalityfrontline:kevent:2.2.0")
 <dependency>
     <groupId>org.rationalityfrontline</groupId>
     <artifactId>kevent</artifactId>
-    <version>2.2.0</version>
+    <version>2.3.0</version>
 </dependency>
 ```
 
@@ -165,7 +165,7 @@ JDK: OpenJDK 17+35-2724 64 bit
 KEvent is released under the [Apache 2.0 license](https://github.com/RationalityFrontline/kevent/blob/master/LICENSE).
 
 ```text
-Copyright 2020-2022 RationalityFrontline
+Copyright 2020-2024 RationalityFrontline
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
